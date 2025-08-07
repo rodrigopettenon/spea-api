@@ -1,0 +1,78 @@
+package com.spea.api.utils;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.math.BigDecimal;
+
+public class LogUtil {
+
+    private static final Logger logger = LoggerFactory.getLogger(LogUtil.class);
+
+
+
+    // LOGS DE INICIOS
+
+    //Genérico
+    private static void logInicioDeProcesso(String processo, Object valor) {
+        logger.info("[INÍCIO] Iniciando processo de {}: {}", processo, valor);
+    }
+
+    // Insumo
+    public static void logInicioDeSalvamentoDeInsumo(String nome) {
+        logInicioDeProcesso("cadastro do insumo", nome);
+    }
+
+
+
+    // LOGS DE VALIDAÇÕES
+
+    // Genérico
+    private static void logValidacao(String campo, Object valor) {
+        logger.info("[VALIDAÇÃO] Validando {}: {} ", campo, valor);
+    }
+
+    // Insumo
+    public static void logFiltroValidacao(String procedimento, Object valor) {
+        logger.info("[VALIDAÇÃO - FILTRO] Validando filtro {}: {}", procedimento, valor);
+    }
+
+    public static void logValidacaoNomeDoInsumo(String nome) {
+        logValidacao("nome do insumo", nome);
+    }
+
+    public static void logValidacaoDaQuantidadeDeInsumoPorPacote(Double quantidadePorPacote) {
+        logValidacao("quantidade de insumo por pacote", quantidadePorPacote);
+    }
+
+    public static void logValidacaoDoValorPagoPorPacoteDeInsumo(BigDecimal valorPagoPorPacote) {
+        logValidacao("valor pago por pacote de insumo", valorPagoPorPacote);
+    }
+
+
+
+    //LOGS DE SUCESSOS
+
+    //Genérico
+
+    private static void logSucesso(String procedimento, Object valor) {
+        logger.info("[SUCESSO] Sucesso ao {}: {}", procedimento, valor);
+    }
+
+    // Insumo
+    public static void logSucessoAoCadastrarInsumo(String nome) {
+        logSucesso("cadastrar o insumo", nome);
+    }
+
+    //LOGS DE ERROS
+
+    //Genérico
+    private static void logErroInesperado(String procedimento, Object identificador, Exception excecao) {
+        logger.error("[ERRO] Erro inesperado ao {} {}: {}", procedimento, identificador, excecao.getMessage(), excecao);
+    }
+
+    public static void logErroInesperadoAoCadastrarInsumo(String nome, Exception excecao) {
+        logErroInesperado("cadastrar o insumo", nome, excecao);
+    }
+
+}
