@@ -12,11 +12,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -85,5 +86,169 @@ class InsumoRepositoryTest {
         });
 
         assertEquals("Erro inesperado ao cadastrar um novo insumo.", excecao.getMessage());
+    }
+
+    // Métodos obterListaDeInsumos
+    @Test
+    @DisplayName("Deve obter uma lista de insumos com sucesso.")
+    void deveObterUmaListaDeInsumosComSucesso() {
+        List<Object[]> listaDeResultados = new ArrayList<>();
+        listaDeResultados.add(new Object[]{1L, "Arroz Branco", 1000.00, new BigDecimal("11.90")});
+
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.getResultList()).thenReturn(listaDeResultados);
+
+        List<InsumoDto> listaDeInsumosRetornada = insumoRepository.obterListaDeInsumos();
+
+        assertEquals(1, listaDeInsumosRetornada.size());
+
+        assertEquals(1L, listaDeInsumosRetornada.get(0).getId());
+        assertEquals("Arroz Branco", listaDeInsumosRetornada.get(0).getNome());
+        assertEquals(1000.00, listaDeInsumosRetornada.get(0).getQuantidadePorPacote());
+        assertEquals(new BigDecimal("11.90"), listaDeInsumosRetornada.get(0).getValorPagoPorPacote());
+
+        verify(em).createNativeQuery(anyString());
+        verify(query).getResultList();
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando ocorrer erro ao obter lista de insumos.")
+    void deveLancarExcecaoQuandoOcorrerErroAoObterListaDeInsumos() {
+        // Configuração do mock para lançar exceção
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.getResultList()).thenThrow(new RuntimeException("Erro simulado"));
+
+        // Execução e verificação
+        EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class, () -> {
+            insumoRepository.obterListaDeInsumos();
+        });
+
+        assertEquals("Erro inesperado ao obter lista de insumos.", excecao.getMessage());
+        verify(em).createNativeQuery(anyString());
+        verify(query).getResultList();
+    }
+
+    // Método verificarExistenciaDoInsumoPeloId
+    @Test
+    @DisplayName("Deve retornar true quando insumo existir pelo ID.")
+    void deveRetornarTrueQuandoInsumoExistirPeloId() {
+        Long id = 1L;
+        List<?> listaMock = Collections.singletonList(new Object[]{1});
+
+        // Configuração do mock
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter(eq("id"), eq(id))).thenReturn(query);
+        when(query.getResultList()).thenReturn(listaMock);
+
+        // Execução
+        Boolean resultado = insumoRepository.verificarExistenciaDoInsumoPeloId(id);
+
+        // Verificações
+        assertTrue(resultado);
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("id", id);
+        verify(query).getResultList();
+    }
+
+    @Test
+    @DisplayName("Deve retornar false quando insumo não existir pelo ID.")
+    void deveRetornarFalseQuandoInsumoNaoExistirPeloId() {
+        Long id = 999L;
+        List<?> listaMock = new ArrayList<>();
+
+        // Configuração do mock
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter(eq("id"), eq(id))).thenReturn(query);
+        when(query.getResultList()).thenReturn(listaMock);
+
+        // Execução
+        Boolean resultado = insumoRepository.verificarExistenciaDoInsumoPeloId(id);
+
+        // Verificações
+        assertFalse(resultado);
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("id", id);
+        verify(query).getResultList();
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando ocorrer erro ao verificar existência do insumo.")
+    void deveLancarExcecaoQuandoOcorrerErroAoVerificarExistenciaDoInsumo() {
+        Long id = 1L;
+
+        // Configuração do mock para lançar exceção
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter(eq("id"), eq(id))).thenReturn(query);
+        when(query.getResultList()).thenThrow(new RuntimeException("Erro simulado"));
+
+        // Execução e verificação
+        EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class, () -> {
+            insumoRepository.verificarExistenciaDoInsumoPeloId(id);
+        });
+
+        assertEquals("Erro inesperado ao verificar existência do insumo pelo id.", excecao.getMessage());
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("id", id);
+        verify(query).getResultList();
+    }
+
+    // Método atualizarInsumo
+    @Test
+    @DisplayName("Deve atualizar insumo com sucesso.")
+    void deveAtualizarInsumoComSucesso() {
+        Long id = 1L;
+        InsumoDto dto = new InsumoDto();
+        dto.setNome("Farinha de Trigo Integral");
+        dto.setQuantidadePorPacote(500.00);
+        dto.setValorPagoPorPacote(new BigDecimal("7.50"));
+
+        // Configuração do mock
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter(eq("nome"), eq(dto.getNome()))).thenReturn(query);
+        when(query.setParameter(eq("quantidadePorPacote"), eq(dto.getQuantidadePorPacote()))).thenReturn(query);
+        when(query.setParameter(eq("valorPagoPorPacote"), eq(dto.getValorPagoPorPacote()))).thenReturn(query);
+        when(query.setParameter(eq("id"), eq(id))).thenReturn(query);
+        when(query.executeUpdate()).thenReturn(1);
+
+        // Execução
+        InsumoDto resultado = insumoRepository.atualizarInsumo(id, dto);
+
+        // Verificações
+        assertNotNull(resultado);
+        assertEquals(id, resultado.getId());
+        assertEquals(dto.getNome(), resultado.getNome());
+        assertEquals(dto.getQuantidadePorPacote(), resultado.getQuantidadePorPacote());
+        assertEquals(dto.getValorPagoPorPacote(), resultado.getValorPagoPorPacote());
+
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("nome", dto.getNome());
+        verify(query).setParameter("quantidadePorPacote", dto.getQuantidadePorPacote());
+        verify(query).setParameter("valorPagoPorPacote", dto.getValorPagoPorPacote());
+        verify(query).setParameter("id", id);
+        verify(query).executeUpdate();
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando ocorrer erro ao atualizar insumo.")
+    void deveLancarExcecaoQuandoOcorrerErroAoAtualizarInsumo() {
+        Long id = 1L;
+        InsumoDto dto = new InsumoDto();
+        dto.setNome("Farinha de Trigo");
+        dto.setQuantidadePorPacote(1000.00);
+        dto.setValorPagoPorPacote(new BigDecimal("5.90"));
+
+        // Configuração do mock para lançar exceção
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter(anyString(), any())).thenReturn(query);
+        when(query.executeUpdate()).thenThrow(new RuntimeException("Erro simulado"));
+
+        // Execução e verificação
+        EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class, () -> {
+            insumoRepository.atualizarInsumo(id, dto);
+        });
+
+        assertEquals("Erro inesperado ao realizar atualização do insumo.", excecao.getMessage());
+        verify(em).createNativeQuery(anyString());
+        verify(query).executeUpdate();
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import static com.spea.api.utils.LogUtil.*;
 import static java.util.Objects.isNull;
@@ -65,6 +66,29 @@ public class InsumoService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public List<InsumoDto> obterListaDeInsumos() {
+        logInicioDeObtencaoDeInsumos();
+        return insumoRepository.obterListaDeInsumos();
+    }
 
 
+    @Transactional
+    public InsumoDto atualizarInsumo(Long id, InsumoDto insumoDto) {
+        logInicioDeAtualizacaoDoInsumo(id);
+
+        validarNomeDoInsumo(insumoDto.getNome());
+        validarQuantidadeDeInsumoPorPacote(insumoDto.getQuantidadePorPacote());
+        validarValorPagoPorPacoteDeInsumo(insumoDto.getValorPagoPorPacote());
+        verificarSeOInsumoExistePeloId(id);
+
+        return insumoRepository.atualizarInsumo(id, insumoDto);
+    }
+
+    private void verificarSeOInsumoExistePeloId(Long id) {
+        logVerificacaoDeExistencia(id);
+        if (!insumoRepository.verificarExistenciaDoInsumoPeloId(id)) {
+            throw new EmpreendedorErrorException("O ID do insumo informado não está cadastrado.");
+        }
+    }
 }

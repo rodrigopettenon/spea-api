@@ -18,4 +18,14 @@ public class InsumoController extends BaseController{
         return createObjectReturn(insumoService.cadastrarInsumo(insumoDto));
     }
 
+    @GetMapping("/lista")
+    public ResponseEntity<?> obterListaDeInsumos() {
+        return createObjectReturn(insumoService.obterListaDeInsumos());
+    }
+
+    @PutMapping("/atualizar/{id}")
+    public ResponseEntity<?> atualizarInsumo(@PathVariable(name = "id") Long id,
+                                             @RequestBody InsumoDto insumoDto) {
+        return createObjectReturn(insumoService.atualizarInsumo(id, insumoDto));
+    }
 }

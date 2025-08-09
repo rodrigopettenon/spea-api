@@ -13,12 +13,12 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class InsumoServiceTest {
@@ -197,5 +197,141 @@ class InsumoServiceTest {
         assertEquals("O valor pago por cada pacote de insumo deve ser maior que 0.", excecao.getMessage());
 
         verify(insumoRepository, never()).cadastrarInsumo(any());
+    }
+
+    // Método obterListaDeInsumos
+    @Test
+    @DisplayName("Deve obter uma lista de insumos com sucesso.")
+    void deveObterUmaListaDeInsumosComSucesso() {
+        // Configuração do mock
+        List<InsumoDto> listaMock = new ArrayList<>();
+
+        InsumoDto primeiroInsumoDto = new InsumoDto();
+        primeiroInsumoDto.setId(1L);
+        primeiroInsumoDto.setNome("Farinha de Trigo");
+        primeiroInsumoDto.setQuantidadePorPacote(1000.00);
+        primeiroInsumoDto.setValorPagoPorPacote(new BigDecimal("5.90"));
+
+        InsumoDto segundoInsumoDto = new InsumoDto();
+        segundoInsumoDto.setId(2L);
+        segundoInsumoDto.setNome("Açúcar");
+        segundoInsumoDto.setQuantidadePorPacote(1000.00);
+        segundoInsumoDto.setValorPagoPorPacote(new BigDecimal("4.50"));
+
+        listaMock.add(primeiroInsumoDto);
+        listaMock.add(segundoInsumoDto);
+
+        when(insumoRepository.obterListaDeInsumos()).thenReturn(listaMock);
+
+        // Execução
+        List<InsumoDto> resultado = insumoService.obterListaDeInsumos();
+
+        // Verificações
+        assertNotNull(resultado);
+        assertEquals(2, resultado.size());
+        verify(insumoRepository).obterListaDeInsumos();
+    }
+
+    // Método atualizarInsumo
+    @Test
+    @DisplayName("Deve atualizar um insumo com sucesso.")
+    void deveAtualizarUmInsumoComSucesso() {
+        // Dados de entrada
+        Long id = 1L;
+        InsumoDto dto = new InsumoDto();
+        dto.setNome("Farinha de Trigo Integral");
+        dto.setQuantidadePorPacote(500.00);
+        dto.setValorPagoPorPacote(new BigDecimal("7.50"));
+
+        // Configuração do mock
+        when(insumoRepository.verificarExistenciaDoInsumoPeloId(id)).thenReturn(true);
+        when(insumoRepository.atualizarInsumo(id, dto)).thenReturn(dto);
+
+        // Execução
+        InsumoDto resultado = insumoService.atualizarInsumo(id, dto);
+
+        // Verificações
+        assertNotNull(resultado);
+        verify(insumoRepository).verificarExistenciaDoInsumoPeloId(id);
+        verify(insumoRepository).atualizarInsumo(id, dto);
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando o insumo não existir pelo ID informado.")
+    void deveLancarExcecaoQuandoInsumoNaoExistirPeloId() {
+        // Dados de entrada
+        Long id = 999L;
+        InsumoDto dto = new InsumoDto();
+        dto.setNome("Farinha de Trigo");
+        dto.setQuantidadePorPacote(1000.00);
+        dto.setValorPagoPorPacote(new BigDecimal("5.90"));
+
+        // Configuração do mock
+        when(insumoRepository.verificarExistenciaDoInsumoPeloId(id)).thenReturn(false);
+
+        // Execução e verificação
+        EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class, () -> {
+            insumoService.atualizarInsumo(id, dto);
+        });
+
+        assertEquals("O ID do insumo informado não está cadastrado.", excecao.getMessage());
+        verify(insumoRepository, never()).atualizarInsumo(any(), any());
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando o nome for inválido durante atualização.")
+    void deveLancarExcecaoQuandoNomeForInvalidoDuranteAtualizacao() {
+        // Dados de entrada
+        Long id = 1L;
+        InsumoDto dto = new InsumoDto();
+        dto.setNome(null); // Nome inválido
+        dto.setQuantidadePorPacote(1000.00);
+        dto.setValorPagoPorPacote(new BigDecimal("5.90"));
+
+        // Execução e verificação
+        EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class, () -> {
+            insumoService.atualizarInsumo(id, dto);
+        });
+
+        assertEquals("O nome do insumo é obrigatório.", excecao.getMessage());
+        verify(insumoRepository, never()).atualizarInsumo(any(), any());
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando a quantidade por pacote for inválida durante atualização.")
+    void deveLancarExcecaoQuandoQuantidadePorPacoteForInvalidaDuranteAtualizacao() {
+        // Dados de entrada
+        Long id = 1L;
+        InsumoDto dto = new InsumoDto();
+        dto.setNome("Farinha de Trigo");
+        dto.setQuantidadePorPacote(-1.00); // Quantidade inválida
+        dto.setValorPagoPorPacote(new BigDecimal("5.90"));
+
+        // Execução e verificação
+        EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class, () -> {
+            insumoService.atualizarInsumo(id, dto);
+        });
+
+        assertEquals("A quantidade de insumo por pacote deve ser maior que 0.", excecao.getMessage());
+        verify(insumoRepository, never()).atualizarInsumo(any(), any());
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando o valor pago por pacote for inválido durante atualização.")
+    void deveLancarExcecaoQuandoValorPagoPorPacoteForInvalidoDuranteAtualizacao() {
+        // Dados de entrada
+        Long id = 1L;
+        InsumoDto dto = new InsumoDto();
+        dto.setNome("Farinha de Trigo");
+        dto.setQuantidadePorPacote(1000.00);
+        dto.setValorPagoPorPacote(new BigDecimal("0.00")); // Valor inválido
+
+        // Execução e verificação
+        EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class, () -> {
+            insumoService.atualizarInsumo(id, dto);
+        });
+
+        assertEquals("O valor pago por cada pacote de insumo deve ser maior que 0.", excecao.getMessage());
+        verify(insumoRepository, never()).atualizarInsumo(any(), any());
     }
 }
