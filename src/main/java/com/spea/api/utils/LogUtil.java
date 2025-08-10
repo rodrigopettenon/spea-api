@@ -31,6 +31,10 @@ public class LogUtil {
         logInicioDeProcesso("atualização do insumo pelo ID", id);
     }
 
+    public static void logInicioDeDelecaoDoInsumo(Long identificador) {
+        logInicioDeProcesso("deleção do insumo pelo identificador", identificador);
+    }
+
 
 
 
@@ -88,6 +92,11 @@ public class LogUtil {
     public static void logSucessoAoAtualizarInsumo(Object identificador) {
         logSucesso("atualizar insumo pelo identificador", identificador);
     }
+
+    public static void logSucessoAoDeletarInsumo(Object identificador) {
+        logSucesso("deletar insumo pelo identificador", identificador);
+    }
+
     //LOGS DE ERROS
 
     //Genérico
@@ -109,6 +118,10 @@ public class LogUtil {
 
     public static void logErroInesperadoAoAtualizarInsumo(Object identificador, Exception excecao) {
         logErroInesperado("atualizar insumo pelo identificador", identificador, excecao);
+    }
+
+    public static void logErroInesperadoAoDeletarInsumo(Object identificador, Exception excecao) {
+        logErroInesperado("deletar insumo pelo identificador", identificador, excecao);
     }
 
 }

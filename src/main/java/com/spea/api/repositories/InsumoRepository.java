@@ -122,4 +122,19 @@ public class InsumoRepository {
             throw new EmpreendedorErrorException("Erro inesperado ao realizar atualização do insumo.");
         }
     }
+
+    public void deletarInsumo(Long id) {
+        try{
+            String sql = " DELETE FROM tb_insumos WHERE id = :id ";
+
+            Query query = em.createNativeQuery(sql)
+                    .setParameter("id", id);
+
+            query.executeUpdate();
+            logSucessoAoDeletarInsumo(id);
+        } catch (Exception e) {
+            logErroInesperadoAoDeletarInsumo(id, e);
+            throw new EmpreendedorErrorException("Erro inesperado ao deletar insumo pelo ID");
+        }
+    }
 }

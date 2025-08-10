@@ -251,4 +251,66 @@ class InsumoRepositoryTest {
         verify(em).createNativeQuery(anyString());
         verify(query).executeUpdate();
     }
+
+    // Método deletarInsumo
+    @Test
+    @DisplayName("Deve deletar insumo com sucesso quando o ID existir.")
+    void deveDeletarInsumoComSucesso() {
+        // Arrange
+        Long id = 1L;
+        String sqlEsperada = " DELETE FROM tb_insumos WHERE id = :id ";
+
+        when(em.createNativeQuery(sqlEsperada)).thenReturn(query);
+        when(query.setParameter("id", id)).thenReturn(query);
+        when(query.executeUpdate()).thenReturn(1);
+
+        // Act
+        insumoRepository.deletarInsumo(id);
+
+        // Assert
+        verify(em).createNativeQuery(sqlEsperada);
+        verify(query).setParameter("id", id);
+        verify(query).executeUpdate();
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando ocorrer erro inesperado ao deletar insumo.")
+    void deveLancarExcecaoQuandoOcorrerErroAoDeletar() {
+        // Arrange
+        Long id = 1L;
+        RuntimeException exceptionSimulada = new RuntimeException("Erro de banco de dados");
+
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter("id", id)).thenReturn(query);
+        when(query.executeUpdate()).thenThrow(exceptionSimulada);
+
+        // Act & Assert
+        EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class,
+                () -> insumoRepository.deletarInsumo(id));
+
+        assertEquals("Erro inesperado ao deletar insumo pelo ID", excecao.getMessage());
+
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("id", id);
+        verify(query).executeUpdate();
+    }
+
+    @Test
+    @DisplayName("Deve executar a query mesmo quando nenhum registro for afetado.")
+    void deveExecutarQueryMesmoQuandoNenhumRegistroForAfetado() {
+        // Arrange
+        Long id = 999L; // ID que não existe
+
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter("id", id)).thenReturn(query);
+        when(query.executeUpdate()).thenReturn(0); // Nenhuma linha afetada
+
+        // Act
+        insumoRepository.deletarInsumo(id);
+
+        // Assert
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("id", id);
+        verify(query).executeUpdate();
+    }
 }

@@ -28,4 +28,10 @@ public class InsumoController extends BaseController{
                                              @RequestBody InsumoDto insumoDto) {
         return createObjectReturn(insumoService.atualizarInsumo(id, insumoDto));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deletarInsumo(@PathVariable(name = "id") Long id) {
+        insumoService.deletarInsumo(id);
+        return createObjectReturn("Insumo deletado com sucesso.");
+    }
 }

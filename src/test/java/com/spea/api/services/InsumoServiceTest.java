@@ -334,4 +334,37 @@ class InsumoServiceTest {
         assertEquals("O valor pago por cada pacote de insumo deve ser maior que 0.", excecao.getMessage());
         verify(insumoRepository, never()).atualizarInsumo(any(), any());
     }
+
+    // Método deletarInsumo
+    @Test
+    @DisplayName("Deve deletar um insumo com sucesso quando o ID existir.")
+    void deveDeletarInsumoComSucessoQuandoIdExistir() {
+        Long id = 1L;
+
+        when(insumoRepository.verificarExistenciaDoInsumoPeloId(id)).thenReturn(true);
+        doNothing().when(insumoRepository).deletarInsumo(id);
+
+        insumoService.deletarInsumo(id);
+
+        verify(insumoRepository).verificarExistenciaDoInsumoPeloId(id);
+        verify(insumoRepository).deletarInsumo(id);
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando tentar deletar um insumo com ID inexistente.")
+    void deveLancarExcecaoQuandoDeletarInsumoComIdInexistente() {
+        Long id = 999L;
+
+        when(insumoRepository.verificarExistenciaDoInsumoPeloId(id)).thenReturn(false);
+
+        EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class, () -> {
+            insumoService.deletarInsumo(id);
+        });
+
+        assertEquals("O ID do insumo informado não está cadastrado.", excecao.getMessage());
+        verify(insumoRepository).verificarExistenciaDoInsumoPeloId(id);
+        verify(insumoRepository, never()).deletarInsumo(any());
+    }
+
+
 }

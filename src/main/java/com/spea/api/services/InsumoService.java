@@ -91,4 +91,13 @@ public class InsumoService {
             throw new EmpreendedorErrorException("O ID do insumo informado não está cadastrado.");
         }
     }
+
+    @Transactional
+    public void deletarInsumo(Long id) {
+        logInicioDeDelecaoDoInsumo(id);
+
+        verificarSeOInsumoExistePeloId(id);
+        insumoRepository.deletarInsumo(id);
+    }
+
 }
