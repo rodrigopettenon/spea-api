@@ -21,7 +21,7 @@ public class InsumoRepository {
     private EntityManager em;
 
     public InsumoDto cadastrarInsumo(InsumoDto insumoDto) {
-        try{
+        try {
             StringBuilder sql = new StringBuilder();
             sql.append(" INSERT INTO tb_insumos (nome, quantidade_por_pacote, valor_pago_por_pacote) ");
             sql.append(" VALUES (:nome, :quantidade_por_pacote, :valor_pago_por_pacote) ");
@@ -42,7 +42,7 @@ public class InsumoRepository {
     }
 
     public List<InsumoDto> obterListaDeInsumos() {
-        try{
+        try {
             String sql = " SELECT id, nome, quantidade_por_pacote, valor_pago_por_pacote FROM tb_insumos ";
 
             Query query = em.createNativeQuery(sql);
@@ -124,7 +124,7 @@ public class InsumoRepository {
     }
 
     public void deletarInsumo(Long id) {
-        try{
+        try {
             String sql = " DELETE FROM tb_insumos WHERE id = :id ";
 
             Query query = em.createNativeQuery(sql)

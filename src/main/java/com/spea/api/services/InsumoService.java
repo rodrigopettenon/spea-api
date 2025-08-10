@@ -86,7 +86,8 @@ public class InsumoService {
     }
 
     private void verificarSeOInsumoExistePeloId(Long id) {
-        logVerificacaoDeExistencia(id);
+        logVerificacaoDeExistenciaDoInsumo(id);
+
         if (!insumoRepository.verificarExistenciaDoInsumoPeloId(id)) {
             throw new EmpreendedorErrorException("O ID do insumo informado não está cadastrado.");
         }

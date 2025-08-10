@@ -41,6 +41,10 @@ public class LogUtil {
         logInicioDeProcesso("cadastro da receita", nome);
     }
 
+    public static void logInicioAtualizacaoDaReceita(Long id) {
+        logInicioDeProcesso("atualização da receita pelo ID", id);
+    }
+
 
 
 
@@ -68,13 +72,17 @@ public class LogUtil {
         logValidacao("valor pago por pacote de insumo", valorPagoPorPacote);
     }
 
-    public static void logVerificacaoDeExistencia(Object identificador) {
+    public static void logVerificacaoDeExistenciaDoInsumo(Object identificador) {
         logValidacao("existência do insumo pelo identificador", identificador);
     }
 
     // Receita
     public static void logValidacaoNomeDaReceita(String nome) {
         logValidacao("nome da receita", nome);
+    }
+
+    public static void logVerificacaoDeExistenciaDaReceita(Object identificador) {
+        logValidacao("existência do insumo pelo identificador", identificador);
     }
 
 
@@ -113,6 +121,14 @@ public class LogUtil {
         logSucesso("cadastrar a receita", nome);
     }
 
+    public static void logSucessoAoAtualizarReceita(Object identificador) {
+        logSucesso("atualizar receita pelo identificador", identificador);
+    }
+
+    public static void logSucessoAoVerificarExistenciaDaReceita(Long id) {
+        logSucesso("verificar existência da receita pelo ID", id);
+    }
+
     //LOGS DE ERROS
 
     //Genérico
@@ -143,5 +159,13 @@ public class LogUtil {
     // Receita
     public static void logErroInesperadoAoCadastrarReceita(String nome, Exception excecao) {
         logErroInesperado("cadastrar a receita", nome, excecao);
+    }
+
+    public static void logErroInesperadoAoVerificarExistenciaDaReceita(Object identificador, Exception excecao) {
+        logErroInesperado("verificar existência da receita pelo identificador", identificador, excecao);
+    }
+
+    public static void logErroInesperadoAoAtualizarReceita(Object identificador, Exception excecao) {
+        logErroInesperado("atualizar receita pelo identificador", identificador, excecao);
     }
 }

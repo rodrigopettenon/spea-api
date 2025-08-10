@@ -118,4 +118,69 @@ class ReceitaServiceTest {
 
         verify(receitaRepository).cadastrarReceita(receitaDto);
     }
+
+    // Método atualizarReceita
+    @Test
+    @DisplayName("Deve atualizar receita com sucesso quando dados forem válidos")
+    void deveAtualizarReceitaComSucesso() {
+        // Arrange
+        Long id = 1L;
+        ReceitaDto receitaDto = new ReceitaDto();
+        receitaDto.setNome("Pizza Margherita Atualizada");
+
+        ReceitaDto receitaAtualizada = new ReceitaDto();
+        receitaAtualizada.setId(id);
+        receitaAtualizada.setNome("Pizza Margherita Atualizada");
+
+        when(receitaRepository.verificarExistenciaDaReceitaPeloId(id)).thenReturn(true);
+        when(receitaRepository.atualizarReceita(id, receitaDto)).thenReturn(receitaAtualizada);
+
+        // Act
+        ReceitaDto resultado = receitaService.atualizarReceita(id, receitaDto);
+
+        // Assert
+        assertNotNull(resultado);
+        assertEquals(id, resultado.getId());
+        assertEquals("Pizza Margherita Atualizada", resultado.getNome());
+
+        verify(receitaRepository).verificarExistenciaDaReceitaPeloId(id);
+        verify(receitaRepository).atualizarReceita(id, receitaDto);
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando ID da receita não existir")
+    void deveLancarExcecaoQuandoIdNaoExistir() {
+        // Arrange
+        Long id = 999L;
+        ReceitaDto receitaDto = new ReceitaDto();
+        receitaDto.setNome("Pizza Inexistente");
+
+        when(receitaRepository.verificarExistenciaDaReceitaPeloId(id)).thenReturn(false);
+
+        // Act & Assert
+        EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class,
+                () -> receitaService.atualizarReceita(id, receitaDto));
+
+        assertEquals("O ID da receita informado não está cadastrado.", excecao.getMessage());
+        verify(receitaRepository).verificarExistenciaDaReceitaPeloId(id);
+        verify(receitaRepository, never()).atualizarReceita(any(), any());
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando nome da receita for inválido")
+    void deveLancarExcecaoQuandoNomeForInvalido() {
+        // Arrange
+        Long id = 1L;
+        ReceitaDto receitaDto = new ReceitaDto();
+        receitaDto.setNome(" "); // Nome inválido
+
+        // Act & Assert
+        EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class,
+                () -> receitaService.atualizarReceita(id, receitaDto));
+
+        assertEquals("O nome da receita é obrigatório", excecao.getMessage());
+        verify(receitaRepository, never()).atualizarReceita(any(), any());
+    }
+
+
 }

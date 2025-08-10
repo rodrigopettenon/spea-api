@@ -37,4 +37,22 @@ public class ReceitaService {
             throw new EmpreendedorErrorException("O nome da receita deve ter no máximo 100 caracteres");
         }
     }
+
+    public ReceitaDto atualizarReceita(Long id, ReceitaDto receitaDto) {
+        logInicioAtualizacaoDaReceita(id);
+
+        validarNomeDaReceita(receitaDto.getNome());
+        verificarSeAReceitaExistePeloId(id);
+
+        return receitaRepository.atualizarReceita(id, receitaDto);
+    }
+
+    private void verificarSeAReceitaExistePeloId(Long id) {
+        logVerificacaoDeExistenciaDaReceita(id);
+
+        if (!receitaRepository.verificarExistenciaDaReceitaPeloId(id)) {
+            throw new EmpreendedorErrorException("O ID da receita informado não está cadastrado.");
+        }
+
+    }
 }
