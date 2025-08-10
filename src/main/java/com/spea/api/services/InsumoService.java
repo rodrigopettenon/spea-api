@@ -24,7 +24,7 @@ public class InsumoService {
 
     @Transactional
     public InsumoDto cadastrarInsumo(InsumoDto insumoDto) {
-        logInicioDeSalvamentoDeInsumo(insumoDto.getNome());
+        logInicioCadastroDoInsumo(insumoDto.getNome());
 
         validarNomeDoInsumo(insumoDto.getNome());
         validarQuantidadeDeInsumoPorPacote(insumoDto.getQuantidadePorPacote());

@@ -19,7 +19,7 @@ public class LogUtil {
     }
 
     // Insumo
-    public static void logInicioDeSalvamentoDeInsumo(String nome) {
+    public static void logInicioCadastroDoInsumo(String nome) {
         logInicioDeProcesso("cadastro do insumo", nome);
     }
 
@@ -33,6 +33,12 @@ public class LogUtil {
 
     public static void logInicioDeDelecaoDoInsumo(Long identificador) {
         logInicioDeProcesso("deleção do insumo pelo identificador", identificador);
+    }
+
+    // Receita
+
+    public static void logInicioCadastroDeReceita(String nome) {
+        logInicioDeProcesso("cadastro da receita", nome);
     }
 
 
@@ -66,6 +72,11 @@ public class LogUtil {
         logValidacao("existência do insumo pelo identificador", identificador);
     }
 
+    // Receita
+    public static void logValidacaoNomeDaReceita(String nome) {
+        logValidacao("nome da receita", nome);
+    }
+
 
 
     //LOGS DE SUCESSOS
@@ -97,6 +108,11 @@ public class LogUtil {
         logSucesso("deletar insumo pelo identificador", identificador);
     }
 
+    // Receita
+    public static void logSucessoAoCadastrarReceita(String nome) {
+        logSucesso("cadastrar a receita", nome);
+    }
+
     //LOGS DE ERROS
 
     //Genérico
@@ -124,4 +140,8 @@ public class LogUtil {
         logErroInesperado("deletar insumo pelo identificador", identificador, excecao);
     }
 
+    // Receita
+    public static void logErroInesperadoAoCadastrarReceita(String nome, Exception excecao) {
+        logErroInesperado("cadastrar a receita", nome, excecao);
+    }
 }
