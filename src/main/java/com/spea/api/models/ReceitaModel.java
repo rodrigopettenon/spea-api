@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "tb_receitas")
@@ -15,6 +17,10 @@ public class ReceitaModel implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, unique = true)
     private Long id;
+
+    @OneToMany(mappedBy = "receita", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReceitaInsumoModel> listaReceitaInsumos = new ArrayList<>();
+
 
     @Column(name = "nome", length = 100, nullable = false)
     private String nome;
