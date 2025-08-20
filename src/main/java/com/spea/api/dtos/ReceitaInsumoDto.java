@@ -12,10 +12,19 @@ public class ReceitaInsumoDto implements Serializable {
 
     private Long insumoId;
     private String insumoNome;
+    private Long receitaId;
     private BigDecimal quantidadeUtilizadaInsumo;
     private BigDecimal valorGastoInsumo;
 
     public ReceitaInsumoDto() {
+    }
+
+    public Long getReceitaId() {
+        return receitaId;
+    }
+
+    public void setReceitaId(Long receitaId) {
+        this.receitaId = receitaId;
     }
 
     public Long getInsumoId() {

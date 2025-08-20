@@ -73,6 +73,44 @@ public class InsumoRepository {
         }
     }
 
+    public InsumoDto obterInsumoPeloId(Long id) {
+        try{
+            StringBuilder sql = new StringBuilder();
+            sql.append(" SELECT id, nome, quantidade_por_pacote, valor_pago_por_pacote FROM tb_insumos ");
+            sql.append(" WHERE id = :id LIMIT 1 ");
+
+            Query query = em.createNativeQuery(sql.toString())
+                    .setParameter("id", id);
+
+            List<Object[]> resultList = query.getResultList();
+
+            if(resultList.isEmpty()) {
+                throw new EmpreendedorErrorException("Nenhum insumo encontrado pelo id informado.");
+            }
+
+            Object[] result = resultList.get(0);
+
+            InsumoDto insumoEncontradoDto = new InsumoDto();
+            insumoEncontradoDto.setId(((Number) result[0]).longValue());
+            insumoEncontradoDto.setNome((String) result[1]);
+            insumoEncontradoDto.setQuantidadePorPacote(((Number) result[2]).doubleValue());
+
+            BigDecimal valorPagoPorPacote = new BigDecimal(result [3].toString())
+                    .setScale(2, RoundingMode.HALF_EVEN);
+            insumoEncontradoDto.setValorPagoPorPacote(valorPagoPorPacote);
+
+            logSucessoAoObterInsumoPeloId(id);
+            return insumoEncontradoDto;
+
+        }catch (EmpreendedorErrorException e) {
+            throw e;
+        }
+        catch (Exception e) {
+            logErroInesperadoAoObterInsumoPeloId(id, e);
+            throw new EmpreendedorErrorException("Erro inesperado ao obter insumo pelo id.");
+        }
+    }
+
     public Boolean verificarExistenciaDoInsumoPeloId(Long id) {
         try {
             String sql = " SELECT 1 FROM tb_insumos WHERE id = :id LIMIT 1 ";

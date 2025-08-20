@@ -12,12 +12,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -237,4 +237,80 @@ class ReceitaRepositoryTest {
         verify(em).createNativeQuery(anyString());
         verify(query).getResultList();
     }
+
+    //Método obterReceitaPeloId
+    @Test
+    @DisplayName("Deve obter receita pelo ID com sucesso")
+    void deveObterReceitaPeloIdComSucesso() {
+        // Arrange
+        Long id = 1L;
+        List<Object[]> listaDeResultados = new ArrayList<>();
+        listaDeResultados.add(new Object[]{1L, "Pizza Margherita", new BigDecimal("25.50")});
+
+        // Configuração do mock
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter(eq("id"), eq(id))).thenReturn(query);
+        when(query.getResultList()).thenReturn(listaDeResultados);
+
+        // Execução
+        ReceitaDto resultado = receitaRepository.obterReceitaPeloId(id);
+
+        // Verificações
+        assertNotNull(resultado);
+        assertEquals(1L, resultado.getId());
+        assertEquals("Pizza Margherita", resultado.getNome());
+        assertEquals(new BigDecimal("25.50"), resultado.getTotalGastoInsumos());
+
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("id", id);
+        verify(query).getResultList();
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando nenhuma receita for encontrada pelo ID")
+    void deveLancarExcecaoQuandoNenhumaReceitaForEncontradaPeloId() {
+        // Arrange
+        Long id = 999L;
+        List<Object[]> listaVazia = new ArrayList<>();
+
+        // Configuração do mock
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter(eq("id"), eq(id))).thenReturn(query);
+        when(query.getResultList()).thenReturn(listaVazia);
+
+        // Execução e verificação
+        EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class, () -> {
+            receitaRepository.obterReceitaPeloId(id);
+        });
+
+        assertEquals("Nenhuma receita encontrada pelo id informado.", excecao.getMessage());
+
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("id", id);
+        verify(query).getResultList();
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando ocorrer erro inesperado ao obter receita pelo ID")
+    void deveLancarExcecaoQuandoOcorrerErroAoObterReceitaPeloId() {
+        // Arrange
+        Long id = 1L;
+
+        // Configuração do mock para lançar exceção
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter(eq("id"), eq(id))).thenReturn(query);
+        when(query.getResultList()).thenThrow(new RuntimeException("Erro simulado"));
+
+        // Execução e verificação
+        EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class, () -> {
+            receitaRepository.obterReceitaPeloId(id);
+        });
+
+        assertEquals("Erro inesperado ao buscar receita pelo id.", excecao.getMessage());
+
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("id", id);
+        verify(query).getResultList();
+    }
+
 }

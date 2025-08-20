@@ -1,6 +1,5 @@
 package com.spea.api.repositories;
 
-import com.spea.api.dtos.InsumoDto;
 import com.spea.api.dtos.ReceitaDto;
 import com.spea.api.exceptions.EmpreendedorErrorException;
 import jakarta.persistence.EntityManager;
@@ -8,6 +7,8 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 import static com.spea.api.utils.LogUtil.*;
@@ -33,6 +34,41 @@ public class ReceitaRepository {
         }catch (Exception e) {
             logErroInesperadoAoCadastrarReceita(receitaDto.getNome(), e);
             throw new EmpreendedorErrorException("Erro inesperado ao cadastrar receita.");
+        }
+    }
+
+    public ReceitaDto obterReceitaPeloId(Long id) {
+        try{
+            String sql = " SELECT id, nome, total_gasto_insumos FROM tb_receitas WHERE id = :id LIMIT 1 ";
+
+            Query query = em.createNativeQuery(sql)
+                    .setParameter("id", id);
+
+            List<Object[]> resultList = query.getResultList();
+
+            if (resultList.isEmpty()) {
+                throw new EmpreendedorErrorException("Nenhuma receita encontrada pelo id informado.");
+            }
+
+            Object[] result = resultList.get(0);
+
+            ReceitaDto receitaEncontradaDto = new ReceitaDto();
+            receitaEncontradaDto.setId(((Number) result[0]).longValue());
+            receitaEncontradaDto.setNome((String) result[1]);
+
+            BigDecimal totalGastoInsumos = new BigDecimal(result[2].toString())
+                    .setScale(2, RoundingMode.HALF_EVEN);
+            receitaEncontradaDto.setTotalGastoInsumos(totalGastoInsumos);
+
+            logSucessoAoObterReceitaPeloId(id);
+            return receitaEncontradaDto;
+
+        } catch (EmpreendedorErrorException e) {
+            throw e;
+        }
+        catch (Exception e) {
+            logErroInesperadoAoObterReceitaPeloId(id, e);
+            throw new EmpreendedorErrorException("Erro inesperado ao buscar receita pelo id.");
         }
     }
 

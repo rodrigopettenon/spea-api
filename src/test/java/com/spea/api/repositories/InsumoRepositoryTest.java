@@ -313,4 +313,80 @@ class InsumoRepositoryTest {
         verify(query).setParameter("id", id);
         verify(query).executeUpdate();
     }
+
+    //Método obterInsumoPeloId
+    @Test
+    @DisplayName("Deve obter insumo pelo ID com sucesso")
+    void deveObterInsumoPeloIdComSucesso() {
+        // Arrange
+        Long id = 1L;
+        List<Object[]> listaDeResultados = new ArrayList<>();
+        listaDeResultados.add(new Object[]{1L, "Farinha de Trigo", 1000.00, new BigDecimal("5.90")});
+
+        // Configuração do mock
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter(eq("id"), eq(id))).thenReturn(query);
+        when(query.getResultList()).thenReturn(listaDeResultados);
+
+        // Execução
+        InsumoDto resultado = insumoRepository.obterInsumoPeloId(id);
+
+        // Verificações
+        assertNotNull(resultado);
+        assertEquals(1L, resultado.getId());
+        assertEquals("Farinha de Trigo", resultado.getNome());
+        assertEquals(1000.00, resultado.getQuantidadePorPacote());
+        assertEquals(new BigDecimal("5.90"), resultado.getValorPagoPorPacote());
+
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("id", id);
+        verify(query).getResultList();
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando nenhum insumo for encontrado pelo ID")
+    void deveLancarExcecaoQuandoNenhumInsumoForEncontradoPeloId() {
+        // Arrange
+        Long id = 999L;
+        List<Object[]> listaVazia = new ArrayList<>();
+
+        // Configuração do mock
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter(eq("id"), eq(id))).thenReturn(query);
+        when(query.getResultList()).thenReturn(listaVazia);
+
+        // Execução e verificação
+        EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class, () -> {
+            insumoRepository.obterInsumoPeloId(id);
+        });
+
+        assertEquals("Nenhum insumo encontrado pelo id informado.", excecao.getMessage());
+
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("id", id);
+        verify(query).getResultList();
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando ocorrer erro inesperado ao obter insumo pelo ID")
+    void deveLancarExcecaoQuandoOcorrerErroAoObterInsumoPeloId() {
+        // Arrange
+        Long id = 1L;
+
+        // Configuração do mock para lançar exceção
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter(eq("id"), eq(id))).thenReturn(query);
+        when(query.getResultList()).thenThrow(new RuntimeException("Erro simulado"));
+
+        // Execução e verificação
+        EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class, () -> {
+            insumoRepository.obterInsumoPeloId(id);
+        });
+
+        assertEquals("Erro inesperado ao obter insumo pelo id.", excecao.getMessage());
+
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("id", id);
+        verify(query).getResultList();
+    }
 }

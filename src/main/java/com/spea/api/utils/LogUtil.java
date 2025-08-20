@@ -18,6 +18,10 @@ public class LogUtil {
         logger.info("[INÍCIO] Iniciando processo de {}: {}", processo, valor);
     }
 
+    private static void logInicioDeProcessoAssociacao(String processo, Object valor1,  Object valor2) {
+        logger.info("[INÍCIO] Iniciando processo de {}: {} e insumo: {}", processo, valor1, valor2);
+    }
+
     // Insumo
     public static void logInicioCadastroDoInsumo(String nome) {
         logInicioDeProcesso("cadastro do insumo", nome);
@@ -25,6 +29,10 @@ public class LogUtil {
 
     public static void logInicioDeObtencaoDeInsumos() {
         logInicioDeProcesso("obtenção de insumos", null);
+    }
+
+    public static void logInicioDeObtencaoDoInsumoPorId(Long insumoId) {
+        logInicioDeProcesso("obtenção de insumo pelo id", insumoId);
     }
 
     public static void logInicioDeAtualizacaoDoInsumo(Long id) {
@@ -45,7 +53,23 @@ public class LogUtil {
         logInicioDeProcesso("atualização da receita pelo ID", id);
     }
 
+    public static void logInicioDeObtencaoDaReceitaPorId(Long receitaId) {
+        logInicioDeProcesso("obtenção de receita pelo id", receitaId);
+    }
 
+    // Receita-Insumo
+
+    public static void logInicioCriacaoDeAssociacao(Long receitaId, Long insumoId) {
+        logInicioDeProcessoAssociacao("criação de associação entre receita", receitaId, insumoId);
+    }
+
+    public static void logInicioCalculoDeGastoComInsumo(Double quantidadePorPacote, BigDecimal valorPagoPorPacote,
+                                                        BigDecimal quantidadeUtilizadaInsumo) {
+        logInicioDeProcesso("calculo de gasto com insumo", null);
+        logger.info("Quantidade por pacote: {}", quantidadePorPacote);
+        logger.info("Valor pago por pacote: {}", valorPagoPorPacote);
+        logger.info("Quantidade utilizada de insumo: {}", quantidadeUtilizadaInsumo);
+    }
 
 
     // LOGS DE VALIDAÇÕES
@@ -85,6 +109,10 @@ public class LogUtil {
         logValidacao("existência do insumo pelo identificador", identificador);
     }
 
+    // Receita-Insumo
+    public static void logVerificacaoDeQuantidadeUtilizadaDeInsumo(BigDecimal quantidadeUtilizadaInsumo) {
+        logValidacao("quantidade utilizada de insumo", quantidadeUtilizadaInsumo);
+    }
 
 
     //LOGS DE SUCESSOS
@@ -116,6 +144,10 @@ public class LogUtil {
         logSucesso("deletar insumo pelo identificador", identificador);
     }
 
+    public static void logSucessoAoObterInsumoPeloId(Long id) {
+        logSucesso("obter insumo pelo id", id);
+    }
+
     // Receita
     public static void logSucessoAoCadastrarReceita(String nome) {
         logSucesso("cadastrar a receita", nome);
@@ -129,6 +161,10 @@ public class LogUtil {
         logSucesso("verificar existência da receita pelo ID", id);
     }
 
+    public static void logSucessoAoObterReceitaPeloId(Long id) {
+        logSucesso("obter receita pelo id", id);
+    }
+
     //LOGS DE ERROS
 
     //Genérico
@@ -136,6 +172,7 @@ public class LogUtil {
         logger.error("[ERRO] Erro inesperado ao {} {}: {}", procedimento, identificador, excecao.getMessage(), excecao);
     }
 
+    // Insumo
     public static void logErroInesperadoAoCadastrarInsumo(String nome, Exception excecao) {
         logErroInesperado("cadastrar o insumo", nome, excecao);
     }
@@ -156,6 +193,10 @@ public class LogUtil {
         logErroInesperado("deletar insumo pelo identificador", identificador, excecao);
     }
 
+    public static void logErroInesperadoAoObterInsumoPeloId(Object identificador, Exception excecao) {
+        logErroInesperado("obter insumo pelo id", identificador, excecao);
+    }
+
     // Receita
     public static void logErroInesperadoAoCadastrarReceita(String nome, Exception excecao) {
         logErroInesperado("cadastrar a receita", nome, excecao);
@@ -167,5 +208,9 @@ public class LogUtil {
 
     public static void logErroInesperadoAoAtualizarReceita(Object identificador, Exception excecao) {
         logErroInesperado("atualizar receita pelo identificador", identificador, excecao);
+    }
+
+    public static void logErroInesperadoAoObterReceitaPeloId(Object identificador, Exception excecao) {
+        logErroInesperado("obter receita pelo id", identificador, excecao);
     }
 }
