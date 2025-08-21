@@ -98,6 +98,7 @@ public class InsumoService {
         logInicioDeDelecaoDoInsumo(id);
 
         verificarSeOInsumoExistePeloId(id);
+
         insumoRepository.deletarInsumo(id);
     }
 

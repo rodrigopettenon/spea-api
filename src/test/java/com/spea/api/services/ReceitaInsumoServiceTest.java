@@ -445,4 +445,28 @@ class ReceitaInsumoServiceTest {
 
         verify(receitaInsumoRepository).criarAssociacao(receitaId, insumoId, quantidadeUtilizadaInsumo, new BigDecimal("5.04"));
     }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando já existir associação entre a receita e o insumo")
+    void deveLancarExcecaoQuandoJaExistirAssociacao() {
+        // Arrange
+        Long receitaId = 1L;
+        Long insumoId = 2L;
+        BigDecimal quantidadeUtilizadaInsumo = new BigDecimal("100.50");
+
+        when(receitaInsumoRepository.verificarExistenciaDaAssociacaoDaReceitaEInsumo(receitaId, insumoId)).thenReturn(true);
+
+        // Act & Assert
+        EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class,
+                () -> receitaInsumoService.criarAssociacao(receitaId, insumoId, quantidadeUtilizadaInsumo));
+
+        assertEquals("O insumo informado já está associado à receita informada.", excecao.getMessage());
+
+        verify(receitaInsumoRepository).verificarExistenciaDaAssociacaoDaReceitaEInsumo(receitaId, insumoId);
+        verify(receitaRepository, never()).verificarExistenciaDaReceitaPeloId(any());
+        verify(insumoRepository, never()).verificarExistenciaDoInsumoPeloId(any());
+        verify(receitaRepository, never()).obterReceitaPeloId(any());
+        verify(insumoRepository, never()).obterInsumoPeloId(any());
+        verify(receitaInsumoRepository, never()).criarAssociacao(any(), any(), any(), any());
+    }
 }

@@ -12,6 +12,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -89,6 +92,84 @@ class ReceitaInsumoRepositoryTest {
         verify(em).createNativeQuery(anyString());
         verify(query, times(4)).setParameter(anyString(), any());
         verify(query).executeUpdate();
+    }
+
+    // Método verificarExistenciaDaAssociacaoDaReceitaEInsumo
+
+    @Test
+    @DisplayName("Deve retornar true quando existir associação entre receita e insumo")
+    void deveRetornarTrueQuandoExistirAssociacao() {
+        // Arrange
+        Long receitaId = 1L;
+        Long insumoId = 2L;
+        List<?> listaComResultado = Collections.singletonList(new Object[]{1});
+
+        // Configuração do mock
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter(eq("receitaId"), eq(receitaId))).thenReturn(query);
+        when(query.setParameter(eq("insumoId"), eq(insumoId))).thenReturn(query);
+        when(query.getResultList()).thenReturn(listaComResultado);
+
+        // Execução
+        Boolean resultado = receitaInsumoRepository.verificarExistenciaDaAssociacaoDaReceitaEInsumo(receitaId, insumoId);
+
+        // Verificações
+        assertTrue(resultado);
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("receitaId", receitaId);
+        verify(query).setParameter("insumoId", insumoId);
+        verify(query).getResultList();
+    }
+
+    @Test
+    @DisplayName("Deve retornar false quando não existir associação entre receita e insumo")
+    void deveRetornarFalseQuandoNaoExistirAssociacao() {
+        // Arrange
+        Long receitaId = 1L;
+        Long insumoId = 3L;
+        List<?> listaVazia = new ArrayList<>();
+
+        // Configuração do mock
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter(eq("receitaId"), eq(receitaId))).thenReturn(query);
+        when(query.setParameter(eq("insumoId"), eq(insumoId))).thenReturn(query);
+        when(query.getResultList()).thenReturn(listaVazia);
+
+        // Execução
+        Boolean resultado = receitaInsumoRepository.verificarExistenciaDaAssociacaoDaReceitaEInsumo(receitaId, insumoId);
+
+        // Verificações
+        assertFalse(resultado);
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("receitaId", receitaId);
+        verify(query).setParameter("insumoId", insumoId);
+        verify(query).getResultList();
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando ocorrer erro inesperado ao verificar existência da associação")
+    void deveLancarExcecaoQuandoOcorrerErroAoVerificarExistenciaDaAssociacao() {
+        // Arrange
+        Long receitaId = 1L;
+        Long insumoId = 2L;
+
+        // Configuração do mock para lançar exceção
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter(eq("receitaId"), eq(receitaId))).thenReturn(query);
+        when(query.setParameter(eq("insumoId"), eq(insumoId))).thenReturn(query);
+        when(query.getResultList()).thenThrow(new RuntimeException("Erro simulado"));
+
+        // Execução e verificação
+        EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class, () -> {
+            receitaInsumoRepository.verificarExistenciaDaAssociacaoDaReceitaEInsumo(receitaId, insumoId);
+        });
+
+        assertEquals("Erro inesperado ao verificar existência da associação entre receita e insumo.", excecao.getMessage());
+
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("receitaId", receitaId);
+        verify(query).setParameter("insumoId", insumoId);
+        verify(query).getResultList();
     }
 
 }

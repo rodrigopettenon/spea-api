@@ -35,6 +35,7 @@ public class ReceitaInsumoService {
     public ReceitaInsumoDto criarAssociacao(Long receitaId, Long insumoId, BigDecimal quantidadeUtilizadaInsumo) {
         logInicioCriacaoDeAssociacao(receitaId, insumoId);
 
+        verificarSeExisteAssociacaoExistenteDeInsumoEReceita(receitaId, insumoId);
         verificarQuantidadeUtilizadaInsumo(quantidadeUtilizadaInsumo);
         verificarExistenciaDaReceitaPeloId(receitaId);
         verificarExistenciaDoInsumoPeloId(insumoId);
@@ -58,6 +59,14 @@ public class ReceitaInsumoService {
         receitaRepository.atualizarReceita(receitaId, receitaAtualizadaDto);
 
         return receitaInsumoRepository.criarAssociacao(receitaId, insumoId, quantidadeUtilizadaInsumo, valorGastoInsumo);
+    }
+
+    private void verificarSeExisteAssociacaoExistenteDeInsumoEReceita(Long receitaId, Long insumoId) {
+        logVerificacaoExistenciaDeAssociacaoEntreReceitaEInsumo(receitaId, insumoId);
+
+        if (receitaInsumoRepository.verificarExistenciaDaAssociacaoDaReceitaEInsumo(receitaId, insumoId)) {
+            throw new EmpreendedorErrorException("O insumo informado já está associado à receita informada.");
+        }
     }
 
     private void verificarQuantidadeUtilizadaInsumo(BigDecimal quantidadeUtilizadaInsumo) {

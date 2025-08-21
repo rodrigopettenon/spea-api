@@ -79,6 +79,10 @@ public class LogUtil {
         logger.info("[VALIDAÇÃO] Validando {}: {} ", campo, valor);
     }
 
+    private static void logValidacao(String campo, Object valor1, Object valor2) {
+        logger.info("[VALIDAÇÃO] Validando {}: receita {} e insumo {}", campo, valor1, valor2);
+    }
+
     // Insumo
     public static void logFiltroValidacao(String procedimento, Object valor) {
         logger.info("[VALIDAÇÃO - FILTRO] Validando filtro {}: {}", procedimento, valor);
@@ -114,6 +118,10 @@ public class LogUtil {
         logValidacao("quantidade utilizada de insumo", quantidadeUtilizadaInsumo);
     }
 
+    public static void logVerificacaoExistenciaDeAssociacaoEntreReceitaEInsumo(Long receitaId, Long insumoId) {
+        logValidacao("existência de associação entre", receitaId, insumoId);
+    }
+
 
     //LOGS DE SUCESSOS
 
@@ -121,6 +129,10 @@ public class LogUtil {
 
     private static void logSucesso(String procedimento, Object valor) {
         logger.info("[SUCESSO] Sucesso ao {}: {}", procedimento, valor);
+    }
+
+    private static void logSucesso(String procedimento, Object valor1, Object valor2) {
+        logger.info("[SUCESSO] Sucesso ao {}: receita {} e insumo {}", procedimento, valor1, valor2);
     }
 
     // Insumo
@@ -165,11 +177,24 @@ public class LogUtil {
         logSucesso("obter receita pelo id", id);
     }
 
+    // Receita-Insumo
+    public static void logSucessoAoCriarAssociacaoEntreReceitaEInsumo(Long receitaId, Long insumoId) {
+        logSucesso("criar associação entre", receitaId, insumoId);
+    }
+
+    public static void logSucessoAoVerificarExistenciaDaAssociacaoDeReceitaEInsumo(Long receitaId, Long insumoId) {
+        logSucesso("verificar existência da associação entre", receitaId, insumoId);
+    }
+
     //LOGS DE ERROS
 
     //Genérico
     private static void logErroInesperado(String procedimento, Object identificador, Exception excecao) {
         logger.error("[ERRO] Erro inesperado ao {} {}: {}", procedimento, identificador, excecao.getMessage(), excecao);
+    }
+
+    private static void logErroInesperado(String procedimento, Object identificador1, Object identificador2, Exception excecao) {
+        logger.error("[ERRO] Erro inesperado ao {} receita {} e insumo {}: {}", procedimento, identificador1, identificador2, excecao.getMessage(), excecao);
     }
 
     // Insumo
@@ -213,4 +238,14 @@ public class LogUtil {
     public static void logErroInesperadoAoObterReceitaPeloId(Object identificador, Exception excecao) {
         logErroInesperado("obter receita pelo id", identificador, excecao);
     }
+
+    // Receita-Insumo
+    public static void logErroInesperadoAoCriarAssociacaoEntreReceitaEInsumo(Long receitaId, Long insumoId, Exception excecao) {
+        logErroInesperado("criar associação entre", receitaId, insumoId, excecao);
+    }
+
+    public static void logErroInesperadoAoVerificarExistenciaDaAssociacaoDeReceitaEInsumo(Long receitaId, Long insumoId, Exception excecao) {
+        logErroInesperado("verificar existência da associação entre", receitaId, insumoId, excecao);
+    }
+
 }

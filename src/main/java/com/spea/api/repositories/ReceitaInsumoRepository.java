@@ -8,6 +8,9 @@ import jakarta.persistence.Query;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.util.List;
+
+import static com.spea.api.utils.LogUtil.*;
 
 @Repository
 public class ReceitaInsumoRepository {
@@ -37,10 +40,32 @@ public class ReceitaInsumoRepository {
             receitaInsumoAssociacaoDto.setQuantidadeUtilizadaInsumo(quantidadeUtilizadaInsumo);
             receitaInsumoAssociacaoDto.setValorGastoInsumo(valorGastoInsumo);
 
+            logSucessoAoCriarAssociacaoEntreReceitaEInsumo(receitaId, insumoId);
             return receitaInsumoAssociacaoDto;
 
         }catch (Exception e) {
+            logErroInesperadoAoCriarAssociacaoEntreReceitaEInsumo(receitaId, insumoId, e);
             throw new EmpreendedorErrorException("Erro inesperado ao criar associação entre receita e insumo.");
+        }
+    }
+
+    public Boolean verificarExistenciaDaAssociacaoDaReceitaEInsumo(Long receitaId, Long insumoId) {
+        try{
+            StringBuilder sql = new StringBuilder();
+            sql.append(" SELECT 1 FROM tb_receita_insumo WHERE receita_id = :receitaId ");
+            sql.append(" AND insumo_id = :insumoId ");
+
+            Query query = em.createNativeQuery(sql.toString())
+                    .setParameter("receitaId", receitaId)
+                    .setParameter("insumoId", insumoId);
+
+            List<?> listaDeResultado = query.getResultList();
+
+            logSucessoAoVerificarExistenciaDaAssociacaoDeReceitaEInsumo(receitaId, insumoId);
+            return !listaDeResultado.isEmpty();
+
+        } catch (Exception e) {
+            throw new EmpreendedorErrorException("Erro inesperado ao verificar existência da associação entre receita e insumo.");
         }
     }
 }
