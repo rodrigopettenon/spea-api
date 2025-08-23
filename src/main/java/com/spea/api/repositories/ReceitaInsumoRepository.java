@@ -8,6 +8,8 @@ import jakarta.persistence.Query;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.spea.api.utils.LogUtil.*;
@@ -66,6 +68,40 @@ public class ReceitaInsumoRepository {
 
         } catch (Exception e) {
             throw new EmpreendedorErrorException("Erro inesperado ao verificar existência da associação entre receita e insumo.");
+        }
+    }
+
+    public List<ReceitaInsumoDto> obterListaDeInsumosAssociadosAReceitasPeloId(Long insumoId) {
+        try{
+            String sql = " SELECT * FROM tb_receita_insumo WHERE insumo_id = :insumoId ";
+
+            Query query = em.createNativeQuery(sql)
+                    .setParameter("insumoId", insumoId);
+
+            List<Object[]> listaDeResultados = query.getResultList();
+
+            List<ReceitaInsumoDto> listaDeInsumosAssociadosAReceitas = new ArrayList<>();
+
+            for (Object[] resultado : listaDeResultados) {
+                ReceitaInsumoDto receitaInsumoDto = new ReceitaInsumoDto();
+                receitaInsumoDto.setInsumoId(((Number) resultado[0]).longValue());
+                receitaInsumoDto.setReceitaId(((Number) resultado[1]).longValue());
+
+                BigDecimal quantidadeUtilizadaInsumo = new BigDecimal(resultado[2].toString())
+                        .setScale(2, RoundingMode.HALF_EVEN);
+                receitaInsumoDto.setQuantidadeUtilizadaInsumo(quantidadeUtilizadaInsumo);
+
+                BigDecimal valorGastoInsumo = new BigDecimal(resultado[3].toString())
+                        .setScale(2, RoundingMode.HALF_EVEN);
+                receitaInsumoDto.setValorGastoInsumo(valorGastoInsumo);
+
+                listaDeInsumosAssociadosAReceitas.add(receitaInsumoDto);
+            }
+
+            return listaDeInsumosAssociadosAReceitas;
+
+        } catch (RuntimeException e) {
+            throw new EmpreendedorErrorException("Erro inesperado ao obter lista de insumos associados à receitas pelo id.");
         }
     }
 }

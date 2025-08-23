@@ -9,7 +9,6 @@ import com.spea.api.repositories.ReceitaInsumoRepository;
 import com.spea.api.repositories.ReceitaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -19,7 +18,7 @@ import static com.spea.api.utils.LogUtil.*;
 import static java.util.Objects.isNull;
 
 @Service
-@Transactional(propagation = Propagation.NOT_SUPPORTED)
+@Transactional
 public class ReceitaInsumoService {
 
     @Autowired

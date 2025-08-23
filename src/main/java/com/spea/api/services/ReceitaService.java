@@ -5,14 +5,13 @@ import com.spea.api.exceptions.EmpreendedorErrorException;
 import com.spea.api.repositories.ReceitaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import static com.spea.api.utils.LogUtil.*;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Service
-@Transactional(propagation = Propagation.NOT_SUPPORTED)
+@Transactional
 public class ReceitaService {
 
     @Autowired
@@ -47,7 +46,7 @@ public class ReceitaService {
         return receitaRepository.atualizarReceita(id, receitaDto);
     }
 
-    private void verificarSeAReceitaExistePeloId(Long id) {
+    protected void verificarSeAReceitaExistePeloId(Long id) {
         logVerificacaoDeExistenciaDaReceita(id);
 
         if (!receitaRepository.verificarExistenciaDaReceitaPeloId(id)) {

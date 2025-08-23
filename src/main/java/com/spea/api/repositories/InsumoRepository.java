@@ -82,20 +82,20 @@ public class InsumoRepository {
             Query query = em.createNativeQuery(sql.toString())
                     .setParameter("id", id);
 
-            List<Object[]> resultList = query.getResultList();
+            List<Object[]> listaDeResultados = query.getResultList();
 
-            if(resultList.isEmpty()) {
+            if(listaDeResultados.isEmpty()) {
                 throw new EmpreendedorErrorException("Nenhum insumo encontrado pelo id informado.");
             }
 
-            Object[] result = resultList.get(0);
+            Object[] resultado = listaDeResultados.get(0);
 
             InsumoDto insumoEncontradoDto = new InsumoDto();
-            insumoEncontradoDto.setId(((Number) result[0]).longValue());
-            insumoEncontradoDto.setNome((String) result[1]);
-            insumoEncontradoDto.setQuantidadePorPacote(((Number) result[2]).doubleValue());
+            insumoEncontradoDto.setId(((Number) resultado[0]).longValue());
+            insumoEncontradoDto.setNome((String) resultado[1]);
+            insumoEncontradoDto.setQuantidadePorPacote(((Number) resultado[2]).doubleValue());
 
-            BigDecimal valorPagoPorPacote = new BigDecimal(result [3].toString())
+            BigDecimal valorPagoPorPacote = new BigDecimal(resultado[3].toString())
                     .setScale(2, RoundingMode.HALF_EVEN);
             insumoEncontradoDto.setValorPagoPorPacote(valorPagoPorPacote);
 
@@ -118,10 +118,10 @@ public class InsumoRepository {
             Query query = em.createNativeQuery(sql)
                     .setParameter("id", id);
 
-            List<?> listaDeResultado = query.getResultList();
+            List<?> listaDeResultados = query.getResultList();
 
             logSucessoAoVerificarExistenciaDoInsumo(id);
-            return !listaDeResultado.isEmpty();
+            return !listaDeResultados.isEmpty();
 
         } catch (Exception e) {
             logErroInesperadoAoVerificarExistenciaDoInsumo(id, e);
