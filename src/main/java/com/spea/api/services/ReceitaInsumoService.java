@@ -79,7 +79,7 @@ public class ReceitaInsumoService {
         }
     }
 
-    private BigDecimal calcularGastoComInsumo(Double quantidadePorPacote, BigDecimal valorPagoPorPacote,
+    protected BigDecimal calcularGastoComInsumo(Double quantidadePorPacote, BigDecimal valorPagoPorPacote,
                                               BigDecimal quantidadeUtilizadaInsumo) {
         validarQuantidadePorPacote(quantidadePorPacote);
         validarValorPagoPorPacote(valorPagoPorPacote);

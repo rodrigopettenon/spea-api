@@ -104,6 +104,10 @@ public class LogUtil {
         logValidacao("existência do insumo pelo identificador", identificador);
     }
 
+    public static void logVerificacaoDeTotalAtualEValorASubtrair(BigDecimal totalAtual, BigDecimal valorASubtrair) {
+        logger.info("[VALIDAÇÃO] Validando total atual {} e valor a subtrair {}", totalAtual, valorASubtrair);
+    }
+
     // Receita
     public static void logValidacaoNomeDaReceita(String nome) {
         logValidacao("nome da receita", nome);
@@ -186,6 +190,14 @@ public class LogUtil {
         logSucesso("verificar existência da associação entre", receitaId, insumoId);
     }
 
+    public static void logSucessoAoAtualizarReceitaInsumo(Long receitaId, Long insumoId) {
+        logSucesso("atualizar informações sobre a associação entre", receitaId, insumoId);
+    }
+
+    public static void logSucessoAoObterListaDeInsumosAssociadosAReceitasPeloId(Long insumoId) {
+        logSucesso("obter lista de insumos associados à receitas pelo id", insumoId);
+    }
+
     //LOGS DE ERROS
 
     //Genérico
@@ -247,5 +259,14 @@ public class LogUtil {
     public static void logErroInesperadoAoVerificarExistenciaDaAssociacaoDeReceitaEInsumo(Long receitaId, Long insumoId, Exception excecao) {
         logErroInesperado("verificar existência da associação entre", receitaId, insumoId, excecao);
     }
+
+    public static void logErroInesperadoAoObterListaDeInsumosAssociadosAReceitasPeloId(Long insumoId, Exception excecao) {
+        logErroInesperado("obter lista de insumos associados à receitas pelo id", insumoId, excecao);
+    }
+
+    public static void logErroInesperadoAoAtualizarReceitaInsumo(Long receitaId, Long insumoId, Exception excecao) {
+        logErroInesperado("Erro ao atualizar informações sobre a associação entre", receitaId, insumoId, excecao);
+    }
+
 
 }

@@ -1,12 +1,17 @@
 package com.spea.api.services;
 
 import com.spea.api.dtos.InsumoDto;
+import com.spea.api.dtos.ReceitaDto;
+import com.spea.api.dtos.ReceitaInsumoDto;
 import com.spea.api.exceptions.EmpreendedorErrorException;
 import com.spea.api.repositories.InsumoRepository;
+import com.spea.api.repositories.ReceitaInsumoRepository;
+import com.spea.api.repositories.ReceitaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -14,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -28,6 +34,19 @@ class InsumoServiceTest {
 
     @Mock
     private InsumoRepository insumoRepository;
+
+    @Mock
+    private ReceitaInsumoRepository receitaInsumoRepository;
+
+    @Mock
+    private ReceitaRepository receitaRepository;
+
+    @Mock
+    private ReceitaService receitaService;
+
+    @Mock
+    private ReceitaInsumoService receitaInsumoService;
+
 
     @BeforeEach
     void setUp() {
@@ -257,28 +276,6 @@ class InsumoServiceTest {
     }
 
     @Test
-    @DisplayName("Deve lançar exceção quando o insumo não existir pelo ID informado.")
-    void deveLancarExcecaoQuandoInsumoNaoExistirPeloId() {
-        // Dados de entrada
-        Long id = 999L;
-        InsumoDto dto = new InsumoDto();
-        dto.setNome("Farinha de Trigo");
-        dto.setQuantidadePorPacote(1000.00);
-        dto.setValorPagoPorPacote(new BigDecimal("5.90"));
-
-        // Configuração do mock
-        when(insumoRepository.verificarExistenciaDoInsumoPeloId(id)).thenReturn(false);
-
-        // Execução e verificação
-        EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class, () -> {
-            insumoService.atualizarInsumo(id, dto);
-        });
-
-        assertEquals("O ID do insumo informado não está cadastrado.", excecao.getMessage());
-        verify(insumoRepository, never()).atualizarInsumo(any(), any());
-    }
-
-    @Test
     @DisplayName("Deve lançar exceção quando o nome for inválido durante atualização.")
     void deveLancarExcecaoQuandoNomeForInvalidoDuranteAtualizacao() {
         // Dados de entrada
@@ -335,35 +332,326 @@ class InsumoServiceTest {
         verify(insumoRepository, never()).atualizarInsumo(any(), any());
     }
 
-    // Método deletarInsumo
     @Test
-    @DisplayName("Deve deletar um insumo com sucesso quando o ID existir.")
-    void deveDeletarInsumoComSucessoQuandoIdExistir() {
+    @DisplayName("Deve atualizar insumo sem associações com sucesso")
+    void deveAtualizarInsumoSemAssociacoesComSucesso() {
+        // Arrange
         Long id = 1L;
+        InsumoDto insumoDto = new InsumoDto();
+        insumoDto.setNome("Farinha Atualizada");
+        insumoDto.setQuantidadePorPacote(1000.0);
+        insumoDto.setValorPagoPorPacote(new BigDecimal("12.50"));
+
+        InsumoDto insumoAtualizado = new InsumoDto();
+        insumoAtualizado.setId(id);
+        insumoAtualizado.setNome("Farinha Atualizada");
+        insumoAtualizado.setQuantidadePorPacote(1000.0);
+        insumoAtualizado.setValorPagoPorPacote(new BigDecimal("12.50"));
+
+        List<ReceitaInsumoDto> listaVazia = new ArrayList<>();
 
         when(insumoRepository.verificarExistenciaDoInsumoPeloId(id)).thenReturn(true);
-        doNothing().when(insumoRepository).deletarInsumo(id);
+        when(receitaInsumoRepository.obterListaDeInsumosAssociadosAReceitasPeloId(id)).thenReturn(listaVazia);
+        when(insumoRepository.atualizarInsumo(id, insumoDto)).thenReturn(insumoAtualizado);
 
-        insumoService.deletarInsumo(id);
+        // Act
+        InsumoDto resultado = insumoService.atualizarInsumo(id, insumoDto);
+
+        // Assert
+        assertNotNull(resultado);
+        assertEquals(id, resultado.getId());
+        assertEquals("Farinha Atualizada", resultado.getNome());
+        assertEquals(1000.0, resultado.getQuantidadePorPacote());
+        assertEquals(new BigDecimal("12.50"), resultado.getValorPagoPorPacote());
 
         verify(insumoRepository).verificarExistenciaDoInsumoPeloId(id);
+        verify(receitaInsumoRepository).obterListaDeInsumosAssociadosAReceitasPeloId(id);
+        verify(insumoRepository).atualizarInsumo(id, insumoDto);
+        verify(receitaInsumoRepository, never()).atualizarReceitaInsumo(any(), any(), any(), any());
+        verify(receitaRepository, never()).atualizarReceita(any(), any());
+    }
+
+    @Test
+    @DisplayName("Deve atualizar insumo com associações e recalcular custos das receitas")
+    void deveAtualizarInsumoComAssociacoesERecalcularCustos() {
+        // Arrange
+        Long id = 1L;
+        InsumoDto insumoDto = new InsumoDto();
+        insumoDto.setNome("Farinha Atualizada");
+        insumoDto.setQuantidadePorPacote(1000.0);
+        insumoDto.setValorPagoPorPacote(new BigDecimal("10.00"));
+
+        InsumoDto insumoAtualizado = new InsumoDto();
+        insumoAtualizado.setId(id);
+        insumoAtualizado.setNome("Farinha Atualizada");
+        insumoAtualizado.setQuantidadePorPacote(1000.0);
+        insumoAtualizado.setValorPagoPorPacote(new BigDecimal("10.00"));
+
+        // Mock das associações
+        List<ReceitaInsumoDto> associacoes = Arrays.asList(
+                criarAssociacao(1L, id, new BigDecimal("200.00"), new BigDecimal("2.00")),
+                criarAssociacao(2L, id, new BigDecimal("300.00"), new BigDecimal("3.00"))
+        );
+
+        // Mock das receitas
+        ReceitaDto receita1 = new ReceitaDto();
+        receita1.setId(1L);
+        receita1.setTotalGastoInsumos(new BigDecimal("50.00"));
+
+        ReceitaDto receita2 = new ReceitaDto();
+        receita2.setId(2L);
+        receita2.setTotalGastoInsumos(new BigDecimal("75.00"));
+
+        when(insumoRepository.verificarExistenciaDoInsumoPeloId(id)).thenReturn(true);
+        when(receitaInsumoRepository.obterListaDeInsumosAssociadosAReceitasPeloId(id)).thenReturn(associacoes);
+        when(receitaInsumoService.calcularGastoComInsumo(1000.0, new BigDecimal("10.00"), new BigDecimal("200.00")))
+                .thenReturn(new BigDecimal("2.00"));
+        when(receitaInsumoService.calcularGastoComInsumo(1000.0, new BigDecimal("10.00"), new BigDecimal("300.00")))
+                .thenReturn(new BigDecimal("3.00"));
+        when(receitaRepository.obterReceitaPeloId(1L)).thenReturn(receita1);
+        when(receitaRepository.obterReceitaPeloId(2L)).thenReturn(receita2);
+        when(insumoRepository.atualizarInsumo(id, insumoDto)).thenReturn(insumoAtualizado);
+
+        // Act
+        InsumoDto resultado = insumoService.atualizarInsumo(id, insumoDto);
+
+        // Assert
+        assertNotNull(resultado);
+        assertEquals(id, resultado.getId());
+
+        // Verifica que os custos foram atualizados
+        verify(receitaInsumoRepository).atualizarReceitaInsumo(1L, id, new BigDecimal("200.00"), new BigDecimal("2.00"));
+        verify(receitaInsumoRepository).atualizarReceitaInsumo(2L, id, new BigDecimal("300.00"), new BigDecimal("3.00"));
+
+        // Verifica que os totais das receitas foram atualizados
+        ArgumentCaptor<ReceitaDto> receitaDtoCaptor = ArgumentCaptor.forClass(ReceitaDto.class);
+        verify(receitaRepository).atualizarReceita(eq(1L), receitaDtoCaptor.capture());
+        assertEquals(0, new BigDecimal("50.00").compareTo(receitaDtoCaptor.getValue().getTotalGastoInsumos()));
+
+        verify(receitaRepository).atualizarReceita(eq(2L), receitaDtoCaptor.capture());
+        assertEquals(0, new BigDecimal("75.00").compareTo(receitaDtoCaptor.getValue().getTotalGastoInsumos()));
+    }
+
+    @Test
+    @DisplayName("Deve garantir que total não fique negativo durante atualização")
+    void deveGarantirQueTotalNaoFiqueNegativoDuranteAtualizacao() {
+        // Arrange
+        Long id = 1L;
+        InsumoDto insumoDto = new InsumoDto();
+        insumoDto.setNome("Farinha");
+        insumoDto.setQuantidadePorPacote(1000.0);
+        insumoDto.setValorPagoPorPacote(new BigDecimal("20.00"));
+
+        // Associação com valor antigo maior que o total atual
+        List<ReceitaInsumoDto> associacoes = List.of(
+                criarAssociacao(1L, id, new BigDecimal("100.00"), new BigDecimal("15.00"))
+        );
+
+        ReceitaDto receita = new ReceitaDto();
+        receita.setId(1L);
+        receita.setTotalGastoInsumos(new BigDecimal("10.00"));
+
+        InsumoDto insumoAtualizado = new InsumoDto();
+        insumoAtualizado.setId(id);
+        insumoAtualizado.setNome("Farinha");
+        insumoAtualizado.setQuantidadePorPacote(1000.0);
+        insumoAtualizado.setValorPagoPorPacote(new BigDecimal("20.00"));
+
+        when(insumoRepository.verificarExistenciaDoInsumoPeloId(id)).thenReturn(true);
+        when(receitaInsumoRepository.obterListaDeInsumosAssociadosAReceitasPeloId(id)).thenReturn(associacoes);
+        when(receitaInsumoService.calcularGastoComInsumo(1000.0, new BigDecimal("20.00"), new BigDecimal("100.00")))
+                .thenReturn(new BigDecimal("2.00"));
+        when(receitaRepository.obterReceitaPeloId(1L)).thenReturn(receita);
+        when(insumoRepository.atualizarInsumo(id, insumoDto)).thenReturn(insumoAtualizado);
+
+        // Act
+        InsumoDto resultado = insumoService.atualizarInsumo(id, insumoDto);
+
+        // Assert - Verifica que o total não ficou negativo
+        ArgumentCaptor<ReceitaDto> receitaDtoCaptor = ArgumentCaptor.forClass(ReceitaDto.class);
+        verify(receitaRepository).atualizarReceita(eq(1L), receitaDtoCaptor.capture());
+
+        // Cálculo: 10.00 - 15.00 (antigo) = -5.00 → max(0) = 0.00 + 2.00 (novo) = 2.00
+        assertEquals(0, new BigDecimal("2.00").compareTo(receitaDtoCaptor.getValue().getTotalGastoInsumos()));
+    }
+
+    // Método deletarInsumo
+    @Test
+    @DisplayName("Deve deletar insumo sem associações com sucesso")
+    void deveDeletarInsumoSemAssociacoesComSucesso() {
+        // Arrange
+        Long id = 1L;
+        List<ReceitaInsumoDto> listaVazia = new ArrayList<>();
+
+        when(insumoRepository.verificarExistenciaDoInsumoPeloId(id)).thenReturn(true);
+        when(receitaInsumoRepository.obterListaDeInsumosAssociadosAReceitasPeloId(id)).thenReturn(listaVazia);
+        doNothing().when(insumoRepository).deletarInsumo(id);
+
+        // Act
+        insumoService.deletarInsumo(id);
+
+        // Assert
+        verify(insumoRepository).verificarExistenciaDoInsumoPeloId(id);
+        verify(receitaInsumoRepository).obterListaDeInsumosAssociadosAReceitasPeloId(id);
+        verify(insumoRepository).deletarInsumo(id);
+        verify(receitaRepository, never()).obterReceitaPeloId(any());
+        verify(receitaRepository, never()).atualizarReceita(any(), any());
+    }
+
+    @Test
+    @DisplayName("Deve deletar insumo com associações e atualizar totais das receitas")
+    void deveDeletarInsumoComAssociacionesEAtualizarTotais() {
+        // Arrange
+        Long id = 1L;
+
+        // Mock das associações do insumo
+        List<ReceitaInsumoDto> associacoes = Arrays.asList(
+                criarAssociacao(1L, id, new BigDecimal("100.50"), new BigDecimal("25.25")),
+                criarAssociacao(2L, id, new BigDecimal("75.25"), new BigDecimal("18.75"))
+        );
+
+        // Mock das receitas associadas
+        ReceitaDto receita1 = new ReceitaDto();
+        receita1.setId(1L);
+        receita1.setTotalGastoInsumos(new BigDecimal("150.00"));
+
+        ReceitaDto receita2 = new ReceitaDto();
+        receita2.setId(2L);
+        receita2.setTotalGastoInsumos(new BigDecimal("200.00"));
+
+        ReceitaDto receitaAtualizada1 = new ReceitaDto();
+        receitaAtualizada1.setId(1L);
+        receitaAtualizada1.setTotalGastoInsumos(new BigDecimal("124.75"));
+
+        ReceitaDto receitaAtualizada2 = new ReceitaDto();
+        receitaAtualizada2.setId(2L);
+        receitaAtualizada2.setTotalGastoInsumos(new BigDecimal("181.25"));
+
+        when(insumoRepository.verificarExistenciaDoInsumoPeloId(id)).thenReturn(true);
+        when(receitaInsumoRepository.obterListaDeInsumosAssociadosAReceitasPeloId(id)).thenReturn(associacoes);
+        when(receitaRepository.obterReceitaPeloId(1L)).thenReturn(receita1);
+        when(receitaRepository.obterReceitaPeloId(2L)).thenReturn(receita2);
+        when(receitaRepository.atualizarReceita(eq(1L), any(ReceitaDto.class))).thenReturn(receitaAtualizada1);
+        when(receitaRepository.atualizarReceita(eq(2L), any(ReceitaDto.class))).thenReturn(receitaAtualizada2);
+        doNothing().when(insumoRepository).deletarInsumo(id);
+
+        // Act
+        insumoService.deletarInsumo(id);
+
+        // Assert - Verifica que os totais foram atualizados corretamente
+        verify(receitaRepository).atualizarReceita(eq(1L), argThat(dto ->
+                dto.getTotalGastoInsumos().equals(new BigDecimal("124.75")))); // 150 - 25.25
+        verify(receitaRepository).atualizarReceita(eq(2L), argThat(dto ->
+                dto.getTotalGastoInsumos().equals(new BigDecimal("181.25")))); // 200 - 18.75
+        verify(insumoRepository).deletarInsumo(id);
+    }
+
+
+    @Test
+    @DisplayName("Deve garantir que total não fique negativo após subtração")
+    void deveGarantirQueTotalNaoFiqueNegativo() {
+        // Arrange
+        Long id = 1L;
+        ReceitaInsumoDto associacao = criarAssociacao(1L, id, new BigDecimal("50.00"), new BigDecimal("30.00"));
+        ReceitaDto receita = new ReceitaDto();
+        receita.setId(1L);
+        receita.setTotalGastoInsumos(new BigDecimal("25.00")); // Total menor que o valor a subtrair
+
+        ReceitaDto receitaAtualizada = new ReceitaDto();
+        receitaAtualizada.setId(1L);
+        receitaAtualizada.setTotalGastoInsumos(new BigDecimal("0.00"));
+
+        when(insumoRepository.verificarExistenciaDoInsumoPeloId(id)).thenReturn(true);
+        when(receitaInsumoRepository.obterListaDeInsumosAssociadosAReceitasPeloId(id)).thenReturn(List.of(associacao));
+        when(receitaRepository.obterReceitaPeloId(1L)).thenReturn(receita);
+        when(receitaRepository.atualizarReceita(eq(1L), any(ReceitaDto.class))).thenReturn(receitaAtualizada);
+        doNothing().when(insumoRepository).deletarInsumo(id);
+
+        // Act
+        insumoService.deletarInsumo(id);
+
+        // Assert - Verifica que o método foi chamado e captura o argumento
+        ArgumentCaptor<ReceitaDto> receitaDtoCaptor = ArgumentCaptor.forClass(ReceitaDto.class);
+        verify(receitaRepository).atualizarReceita(eq(1L), receitaDtoCaptor.capture());
+
+        ReceitaDto dtoAtualizado = receitaDtoCaptor.getValue();
+        assertEquals(0, new BigDecimal("0.00").compareTo(dtoAtualizado.getTotalGastoInsumos()));
+
         verify(insumoRepository).deletarInsumo(id);
     }
 
     @Test
-    @DisplayName("Deve lançar exceção quando tentar deletar um insumo com ID inexistente.")
-    void deveLancarExcecaoQuandoDeletarInsumoComIdInexistente() {
+    @DisplayName("Deve lançar exceção quando total atual for negativo")
+    void deveLancarExcecaoQuandoTotalAtualForNegativo() {
+        // Arrange
+        Long id = 1L;
+        ReceitaInsumoDto associacao = criarAssociacao(1L, id, new BigDecimal("50.00"), new BigDecimal("10.00"));
+        ReceitaDto receita = new ReceitaDto();
+        receita.setId(1L);
+        receita.setTotalGastoInsumos(new BigDecimal("-5.00")); // Total negativo
+
+        when(insumoRepository.verificarExistenciaDoInsumoPeloId(id)).thenReturn(true);
+        when(receitaInsumoRepository.obterListaDeInsumosAssociadosAReceitasPeloId(id)).thenReturn(List.of(associacao));
+        when(receitaRepository.obterReceitaPeloId(1L)).thenReturn(receita);
+
+        // Act & Assert
+        EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class, () -> {
+            insumoService.deletarInsumo(id);
+        });
+
+        assertEquals("O total atual não pode ser negativo.", excecao.getMessage());
+        verify(insumoRepository, never()).deletarInsumo(any());
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando valor a subtrair for negativo")
+    void deveLancarExcecaoQuandoValorASubtrairForNegativo() {
+        // Arrange
+        Long id = 1L;
+        ReceitaInsumoDto associacao = criarAssociacao(1L, id, new BigDecimal("50.00"), new BigDecimal("-5.00")); // Valor negativo
+        ReceitaDto receita = new ReceitaDto();
+        receita.setId(1L);
+        receita.setTotalGastoInsumos(new BigDecimal("100.00"));
+
+        when(insumoRepository.verificarExistenciaDoInsumoPeloId(id)).thenReturn(true);
+        when(receitaInsumoRepository.obterListaDeInsumosAssociadosAReceitasPeloId(id)).thenReturn(List.of(associacao));
+        when(receitaRepository.obterReceitaPeloId(1L)).thenReturn(receita);
+
+        // Act & Assert
+        EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class, () -> {
+            insumoService.deletarInsumo(id);
+        });
+
+        assertEquals("O valor gasto não pode ser negativo.", excecao.getMessage());
+        verify(insumoRepository, never()).deletarInsumo(any());
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando ID do insumo não existir")
+    void deveLancarExcecaoQuandoIdInsumoNaoExistir() {
+        // Arrange
         Long id = 999L;
 
         when(insumoRepository.verificarExistenciaDoInsumoPeloId(id)).thenReturn(false);
 
+        // Act & Assert
         EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class, () -> {
             insumoService.deletarInsumo(id);
         });
 
         assertEquals("O ID do insumo informado não está cadastrado.", excecao.getMessage());
-        verify(insumoRepository).verificarExistenciaDoInsumoPeloId(id);
         verify(insumoRepository, never()).deletarInsumo(any());
+        verify(receitaInsumoRepository, never()).obterListaDeInsumosAssociadosAReceitasPeloId(any());
+    }
+
+    // Método auxiliar para criar associações
+    private ReceitaInsumoDto criarAssociacao(Long receitaId, Long insumoId, BigDecimal quantidade, BigDecimal valor) {
+        ReceitaInsumoDto dto = new ReceitaInsumoDto();
+        dto.setReceitaId(receitaId);
+        dto.setInsumoId(insumoId);
+        dto.setQuantidadeUtilizadaInsumo(quantidade);
+        dto.setValorGastoInsumo(valor);
+        return dto;
     }
 
 

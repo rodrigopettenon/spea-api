@@ -35,6 +35,9 @@ public class InsumoService {
     @Autowired
     private ReceitaService receitaService;
 
+    @Autowired
+    private ReceitaInsumoService receitaInsumoService;
+
     @Transactional
     public InsumoDto cadastrarInsumo(InsumoDto insumoDto) {
         logInicioCadastroDoInsumo(insumoDto.getNome());
@@ -95,8 +98,39 @@ public class InsumoService {
         validarValorPagoPorPacoteDeInsumo(insumoDto.getValorPagoPorPacote());
         verificarSeOInsumoExistePeloId(id);
 
+        List<ReceitaInsumoDto> listaDeInsumosAssociadosAReceitas = receitaInsumoRepository
+                .obterListaDeInsumosAssociadosAReceitasPeloId(id);
+
+        for (ReceitaInsumoDto associacao : listaDeInsumosAssociadosAReceitas) {
+            BigDecimal gastoComInsumoAtualizado = receitaInsumoService
+                    .calcularGastoComInsumo(insumoDto.getQuantidadePorPacote(),
+                    insumoDto.getValorPagoPorPacote(),
+                    associacao.getQuantidadeUtilizadaInsumo());
+
+            receitaInsumoRepository.atualizarReceitaInsumo(associacao.getReceitaId(),
+                    associacao.getInsumoId(),
+                    associacao.getQuantidadeUtilizadaInsumo(),
+                    gastoComInsumoAtualizado);
+
+            receitaService.verificarSeAReceitaExistePeloId(associacao.getReceitaId());
+            ReceitaDto receitaAssociada = receitaRepository
+                    .obterReceitaPeloId(associacao.getReceitaId());
+
+            BigDecimal totalGastoInsumosAtualizado = receitaAssociada
+                    .getTotalGastoInsumos()
+                    .subtract(associacao.getValorGastoInsumo())
+                    .max(BigDecimal.ZERO)
+                    .add(gastoComInsumoAtualizado)
+                    .setScale(2, RoundingMode.HALF_EVEN);
+
+            receitaAssociada.setTotalGastoInsumos(totalGastoInsumosAtualizado);
+
+            receitaRepository.atualizarReceita(receitaAssociada.getId(), receitaAssociada);
+        }
+
         return insumoRepository.atualizarInsumo(id, insumoDto);
     }
+
 
     private void verificarSeOInsumoExistePeloId(Long id) {
         logVerificacaoDeExistenciaDoInsumo(id);
@@ -139,6 +173,8 @@ public class InsumoService {
     }
 
     private void verificarTotalAtualEValorASubtrair(BigDecimal totalAtual, BigDecimal valorASubtrair) {
+        logVerificacaoDeTotalAtualEValorASubtrair(totalAtual, valorASubtrair);
+
         if (totalAtual.compareTo(BigDecimal.ZERO) < 0) {
             throw new EmpreendedorErrorException("O total atual não pode ser negativo.");
         }

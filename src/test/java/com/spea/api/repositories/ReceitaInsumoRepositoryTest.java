@@ -164,12 +164,114 @@ class ReceitaInsumoRepositoryTest {
             receitaInsumoRepository.verificarExistenciaDaAssociacaoDaReceitaEInsumo(receitaId, insumoId);
         });
 
-        assertEquals("Erro inesperado ao verificar existência da associação entre receita e insumo.", excecao.getMessage());
+        assertEquals(String
+                .format("Erro inesperado ao verificar existência da associação entre receita %d e insumo %d.", receitaId, insumoId), excecao.getMessage());
 
         verify(em).createNativeQuery(anyString());
         verify(query).setParameter("receitaId", receitaId);
         verify(query).setParameter("insumoId", insumoId);
         verify(query).getResultList();
+    }
+
+    // Método obterListaDeInsumosAssociadosAReceitasPeloId
+
+
+    // Método atualizarReceitaInsumo
+    @Test
+    @DisplayName("Deve atualizar associação entre receita e insumo com sucesso")
+    void deveAtualizarAssociacaoComSucesso() {
+        // Arrange
+        Long receitaId = 1L;
+        Long insumoId = 2L;
+        BigDecimal quantidadeUtilizadaInsumo = new BigDecimal("150.75");
+        BigDecimal valorGastoInsumo = new BigDecimal("7.53");
+
+        // Configuração do mock
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter(eq("quantidadeUtilizadaInsumo"), eq(quantidadeUtilizadaInsumo))).thenReturn(query);
+        when(query.setParameter(eq("valorGastoInsumo"), eq(valorGastoInsumo))).thenReturn(query);
+        when(query.setParameter(eq("receitaId"), eq(receitaId))).thenReturn(query);
+        when(query.setParameter(eq("insumoId"), eq(insumoId))).thenReturn(query);
+        when(query.executeUpdate()).thenReturn(1);
+
+        // Execução
+        ReceitaInsumoDto resultado = receitaInsumoRepository.atualizarReceitaInsumo(
+                receitaId, insumoId, quantidadeUtilizadaInsumo, valorGastoInsumo);
+
+        // Verificações
+        assertNotNull(resultado);
+        assertEquals(receitaId, resultado.getReceitaId());
+        assertEquals(insumoId, resultado.getInsumoId());
+        assertEquals(quantidadeUtilizadaInsumo, resultado.getQuantidadeUtilizadaInsumo());
+        assertEquals(valorGastoInsumo, resultado.getValorGastoInsumo());
+
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("quantidadeUtilizadaInsumo", quantidadeUtilizadaInsumo);
+        verify(query).setParameter("valorGastoInsumo", valorGastoInsumo);
+        verify(query).setParameter("receitaId", receitaId);
+        verify(query).setParameter("insumoId", insumoId);
+        verify(query).executeUpdate();
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando ocorrer erro ao atualizar associação")
+    void deveLancarExcecaoQuandoOcorrerErroAoAtualizarAssociacao() {
+        // Arrange
+        Long receitaId = 1L;
+        Long insumoId = 2L;
+        BigDecimal quantidadeUtilizadaInsumo = new BigDecimal("150.75");
+        BigDecimal valorGastoInsumo = new BigDecimal("7.53");
+
+        // Configuração do mock para lançar exceção
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter(anyString(), any())).thenReturn(query);
+        when(query.executeUpdate()).thenThrow(new RuntimeException("Erro de banco de dados"));
+
+        // Execução e verificação
+        EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class, () -> {
+            receitaInsumoRepository.atualizarReceitaInsumo(
+                    receitaId, insumoId, quantidadeUtilizadaInsumo, valorGastoInsumo);
+        });
+
+        assertEquals("Erro ao atualizar informações sobre a associação entre receita 1 e insumo 2.", excecao.getMessage());
+
+        verify(em).createNativeQuery(anyString());
+        verify(query, times(4)).setParameter(anyString(), any());
+        verify(query).executeUpdate();
+    }
+
+    @Test
+    @DisplayName("Deve executar a atualização mesmo quando nenhum registro for afetado")
+    void deveExecutarAtualizacaoMesmoQuandoNenhumRegistroForAfetado() {
+        // Arrange
+        Long receitaId = 1L;
+        Long insumoId = 2L;
+        BigDecimal quantidadeUtilizadaInsumo = new BigDecimal("150.75");
+        BigDecimal valorGastoInsumo = new BigDecimal("7.53");
+
+        // Configuração do mock
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter(eq("quantidadeUtilizadaInsumo"), eq(quantidadeUtilizadaInsumo))).thenReturn(query);
+        when(query.setParameter(eq("valorGastoInsumo"), eq(valorGastoInsumo))).thenReturn(query);
+        when(query.setParameter(eq("receitaId"), eq(receitaId))).thenReturn(query);
+        when(query.setParameter(eq("insumoId"), eq(insumoId))).thenReturn(query);
+        when(query.executeUpdate()).thenReturn(0); // Nenhuma linha afetada
+
+        // Execução
+        ReceitaInsumoDto resultado = receitaInsumoRepository.atualizarReceitaInsumo(
+                receitaId, insumoId, quantidadeUtilizadaInsumo, valorGastoInsumo);
+
+        // Verificações
+        assertNotNull(resultado);
+        assertEquals(receitaId, resultado.getReceitaId());
+        assertEquals(insumoId, resultado.getInsumoId());
+
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("quantidadeUtilizadaInsumo", quantidadeUtilizadaInsumo);
+        verify(query).setParameter("valorGastoInsumo", valorGastoInsumo);
+        verify(query).setParameter("receitaId", receitaId);
+        verify(query).setParameter("insumoId", insumoId);
+        verify(query).executeUpdate();
     }
 
 }
