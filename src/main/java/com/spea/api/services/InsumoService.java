@@ -116,9 +116,10 @@ public class InsumoService {
             ReceitaDto receitaAssociada = receitaRepository
                     .obterReceitaPeloId(associacao.getReceitaId());
 
+            BigDecimal valorGastoInsumoAntigo = associacao.getValorGastoInsumo();
             BigDecimal totalGastoInsumosAtualizado = receitaAssociada
                     .getTotalGastoInsumos()
-                    .subtract(associacao.getValorGastoInsumo())
+                    .subtract(valorGastoInsumoAntigo)
                     .max(BigDecimal.ZERO)
                     .add(gastoComInsumoAtualizado)
                     .setScale(2, RoundingMode.HALF_EVEN);
@@ -183,6 +184,4 @@ public class InsumoService {
             throw new EmpreendedorErrorException("O valor gasto não pode ser negativo.");
         }
     }
-
-
 }

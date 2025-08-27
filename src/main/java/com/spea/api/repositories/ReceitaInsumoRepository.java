@@ -1,5 +1,8 @@
 package com.spea.api.repositories;
 
+import com.spea.api.dtos.AssociacaoDto;
+import com.spea.api.dtos.InsumoDto;
+import com.spea.api.dtos.ReceitaDto;
 import com.spea.api.dtos.ReceitaInsumoDto;
 import com.spea.api.exceptions.EmpreendedorErrorException;
 import jakarta.persistence.EntityManager;
@@ -107,6 +110,113 @@ public class ReceitaInsumoRepository {
             logErroInesperadoAoVerificarExistenciaDaAssociacaoDeReceitaEInsumo(receitaId, insumoId, e);
             throw new EmpreendedorErrorException(String
                     .format("Erro inesperado ao verificar existência da associação entre receita %d e insumo %d.", receitaId, insumoId));
+        }
+    }
+
+    public AssociacaoDto obterTodosOsDadosDaAssociacaoPorReceitaIdEInsumoId(Long receitaId, Long insumoId) {
+        try{
+            StringBuilder sql = new StringBuilder();
+            sql.append(" SELECT ri.insumo_id, ri.receita_id, ri.quantidade_utilizada_insumo, ri.valor_gasto_insumo, ");
+            sql.append(" r.id, r.nome, r.total_gasto_insumos, ");
+            sql.append(" i.id, i.nome, i.quantidade_por_pacote, i.valor_pago_por_pacote ");
+            sql.append(" FROM tb_receita_insumo AS ri ");
+            sql.append(" JOIN tb_receitas AS r ON ri.receita_id = r.id ");
+            sql.append(" JOIN tb_insumos AS i ON ri.insumo_id = i.id ");
+            sql.append(" WHERE ri.insumo_id = :insumoId AND ri.receita_id = :receitaId LIMIT 1 ");
+
+            Query query = em.createNativeQuery(sql.toString())
+                    .setParameter("insumoId", insumoId)
+                    .setParameter("receitaId", receitaId);
+
+            List<Object[]> listaDeResultados = query.getResultList();
+            if (listaDeResultados.isEmpty()) {
+                throw new EmpreendedorErrorException(String
+                        .format("Nenhuma associação entre receita %d e insumo %d foi encontada.", receitaId, insumoId));
+            }
+
+            Object[] resultado = listaDeResultados.get(0);
+
+            AssociacaoDto associacaoEncontrada = new AssociacaoDto();
+            ReceitaInsumoDto receitaInsumoDto = new ReceitaInsumoDto();
+            ReceitaDto receitaDto = new ReceitaDto();
+            InsumoDto insumoDto = new InsumoDto();
+
+            receitaInsumoDto.setInsumoId(((Number) resultado[0]).longValue());
+            receitaInsumoDto.setReceitaId(((Number) resultado[1]).longValue());
+            BigDecimal quantidadeUtilizadaInsumo = new BigDecimal(resultado[2].toString())
+                    .setScale(2, RoundingMode.HALF_EVEN);
+            receitaInsumoDto.setQuantidadeUtilizadaInsumo(quantidadeUtilizadaInsumo);
+            BigDecimal valorGastoInsumo = new BigDecimal(resultado[3].toString())
+                    .setScale(2, RoundingMode.HALF_EVEN);
+            receitaInsumoDto.setValorGastoInsumo(valorGastoInsumo);
+
+            receitaDto.setId(((Number) resultado[4]).longValue());
+            receitaDto.setNome((String) resultado[5]);
+            BigDecimal totalGastoInsumos = new BigDecimal(resultado[6].toString())
+                    .setScale(2, RoundingMode.HALF_EVEN);
+            receitaDto.setTotalGastoInsumos(totalGastoInsumos);
+
+            insumoDto.setId(((Number) resultado[7]).longValue());
+            insumoDto.setNome((String) resultado[8]);
+            insumoDto.setQuantidadePorPacote(((Number) resultado[9]).doubleValue());
+            BigDecimal valorPagoPorPacote = new BigDecimal(resultado[10].toString())
+                    .setScale(2, RoundingMode.HALF_EVEN);
+            insumoDto.setValorPagoPorPacote(valorPagoPorPacote);
+
+            associacaoEncontrada.setReceitaInsumoDto(receitaInsumoDto);
+            associacaoEncontrada.setReceitaDto(receitaDto);
+            associacaoEncontrada.setInsumoDto(insumoDto);
+
+            logSucessoAoObterTodosOsDadosDaAssociacao(receitaId, insumoId);
+            return associacaoEncontrada;
+
+        } catch (EmpreendedorErrorException e) {
+            throw e;
+        } catch (Exception e) {
+            logErroInesperadoAoObterTodosOsDadosDaAssociacao(receitaId, insumoId, e);
+            throw new EmpreendedorErrorException(String
+                    .format("Erro inesperado ao obter todos dados da associacao entre receita %d e insumo %d.", receitaId, insumoId));
+        }
+    }
+
+    public ReceitaInsumoDto obterAssociacaoPorReceitaIdEInsumoId(Long receitaId, Long insumoId) {
+        try{
+            StringBuilder sql = new StringBuilder();
+            sql.append(" SELECT insumo_id, receita_id, quantidade_utilizada_insumo, valor_gasto_insumo ");
+            sql.append(" FROM tb_receita_insumo ");
+            sql.append(" WHERE receita_id = :receitaId AND insumo_id = :insumoId LIMIT 1 ");
+
+            Query query = em.createNativeQuery(sql.toString())
+                    .setParameter("receitaId", receitaId)
+                    .setParameter("insumoId", insumoId);
+
+            List<Object[]> listaDeResultados = query.getResultList();
+            if (listaDeResultados.isEmpty()) {
+                throw new EmpreendedorErrorException(String
+                        .format("Nenhuma associação entre receita %d e insumo %d foi encontada.", receitaId, insumoId));
+            }
+
+            Object[] resultado = listaDeResultados.get(0);
+
+            ReceitaInsumoDto associacaoEncontrada = new ReceitaInsumoDto();
+            associacaoEncontrada.setInsumoId(((Number) resultado[0]).longValue());
+            associacaoEncontrada.setReceitaId(((Number) resultado[1]).longValue());
+
+            BigDecimal quantidadeUtilizadaInsumo = new BigDecimal(resultado[2].toString())
+                    .setScale(2, RoundingMode.HALF_EVEN);
+            associacaoEncontrada.setQuantidadeUtilizadaInsumo(quantidadeUtilizadaInsumo);
+
+            BigDecimal valorGastoInsumo =  new BigDecimal(resultado[3].toString())
+                    .setScale(2, RoundingMode.HALF_EVEN);
+            associacaoEncontrada.setValorGastoInsumo(valorGastoInsumo);
+
+            return associacaoEncontrada;
+
+        } catch (EmpreendedorErrorException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new EmpreendedorErrorException(String
+                    .format("Erro inesperado ao obter associação entre a receita %d e insumo %d.", receitaId, insumoId));
         }
     }
 

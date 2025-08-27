@@ -19,7 +19,7 @@ public class LogUtil {
     }
 
     private static void logInicioDeProcessoAssociacao(String processo, Object valor1,  Object valor2) {
-        logger.info("[INÍCIO] Iniciando processo de {}: {} e insumo: {}", processo, valor1, valor2);
+        logger.info("[INÍCIO] Iniciando processo de {}: receita {} e insumo: {}", processo, valor1, valor2);
     }
 
     // Insumo
@@ -60,7 +60,7 @@ public class LogUtil {
     // Receita-Insumo
 
     public static void logInicioCriacaoDeAssociacao(Long receitaId, Long insumoId) {
-        logInicioDeProcessoAssociacao("criação de associação entre receita", receitaId, insumoId);
+        logInicioDeProcessoAssociacao("criação de associação entre", receitaId, insumoId);
     }
 
     public static void logInicioCalculoDeGastoComInsumo(Double quantidadePorPacote, BigDecimal valorPagoPorPacote,
@@ -69,6 +69,10 @@ public class LogUtil {
         logger.info("Quantidade por pacote: {}", quantidadePorPacote);
         logger.info("Valor pago por pacote: {}", valorPagoPorPacote);
         logger.info("Quantidade utilizada de insumo: {}", quantidadeUtilizadaInsumo);
+    }
+
+    public static void logInicioAtualizacaoQuantidadeUtilizadaInsumo(Long receitaId, Long insumoId) {
+        logInicioDeProcessoAssociacao("atualização da quantidade utilizada de insumos da associação entre", receitaId, insumoId);
     }
 
 
@@ -198,6 +202,10 @@ public class LogUtil {
         logSucesso("obter lista de insumos associados à receitas pelo id", insumoId);
     }
 
+    public static void logSucessoAoObterTodosOsDadosDaAssociacao(Long receitaId, Long insumoId) {
+        logSucesso("obter todos os dados da associação entre", receitaId , insumoId);
+    }
+
     //LOGS DE ERROS
 
     //Genérico
@@ -266,6 +274,10 @@ public class LogUtil {
 
     public static void logErroInesperadoAoAtualizarReceitaInsumo(Long receitaId, Long insumoId, Exception excecao) {
         logErroInesperado("Erro ao atualizar informações sobre a associação entre", receitaId, insumoId, excecao);
+    }
+
+    public static void logErroInesperadoAoObterTodosOsDadosDaAssociacao(Long receitaId, Long insumoId, Exception excecao) {
+        logErroInesperado("obter todos dados da associacao entre", receitaId, insumoId, excecao);
     }
 
 

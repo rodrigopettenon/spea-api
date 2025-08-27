@@ -21,4 +21,12 @@ public class ReceitaInsumoController extends BaseController{
         return createObjectReturn(receitaInsumoService.criarAssociacao(receitaId, insumoId, quantidadeUtilizadaInsumo));
     }
 
+    @PutMapping("/atualizar-quantidade/receita/{receitaId}/insumo/{insumoId}")
+    public ResponseEntity<?> atualizarQuantidadeUtilizadaInsumo(@PathVariable(name = "receitaId") Long receitaId,
+                                                                @PathVariable(name = "insumoId") Long insumoId,
+                                                                @RequestParam BigDecimal quantidadeUtilizadaInsumo) {
+        return createObjectReturn(receitaInsumoService
+                .atualizarQuantidadeUtilizadaInsumo(receitaId, insumoId, quantidadeUtilizadaInsumo));
+    }
+
 }

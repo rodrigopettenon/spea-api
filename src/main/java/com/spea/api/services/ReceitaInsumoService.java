@@ -1,5 +1,6 @@
 package com.spea.api.services;
 
+import com.spea.api.dtos.AssociacaoDto;
 import com.spea.api.dtos.InsumoDto;
 import com.spea.api.dtos.ReceitaDto;
 import com.spea.api.dtos.ReceitaInsumoDto;
@@ -34,7 +35,7 @@ public class ReceitaInsumoService {
     public ReceitaInsumoDto criarAssociacao(Long receitaId, Long insumoId, BigDecimal quantidadeUtilizadaInsumo) {
         logInicioCriacaoDeAssociacao(receitaId, insumoId);
 
-        verificarSeExisteAssociacaoExistenteDeInsumoEReceita(receitaId, insumoId);
+        verificarSeExisteAssociacaoDeInsumoEReceita(receitaId, insumoId);
         verificarQuantidadeUtilizadaInsumo(quantidadeUtilizadaInsumo);
         verificarExistenciaDaReceitaPeloId(receitaId);
         verificarExistenciaDoInsumoPeloId(insumoId);
@@ -60,13 +61,22 @@ public class ReceitaInsumoService {
         return receitaInsumoRepository.criarAssociacao(receitaId, insumoId, quantidadeUtilizadaInsumo, valorGastoInsumo);
     }
 
-    private void verificarSeExisteAssociacaoExistenteDeInsumoEReceita(Long receitaId, Long insumoId) {
+    private void verificarSeExisteAssociacaoDeInsumoEReceita(Long receitaId, Long insumoId) {
         logVerificacaoExistenciaDeAssociacaoEntreReceitaEInsumo(receitaId, insumoId);
 
         if (receitaInsumoRepository.verificarExistenciaDaAssociacaoDaReceitaEInsumo(receitaId, insumoId)) {
             throw new EmpreendedorErrorException("O insumo informado já está associado à receita informada.");
         }
     }
+
+    private void verificarSeNaoExisteAssociacaoDeInsumoEReceita(Long receitaId, Long insumoId) {
+        logVerificacaoExistenciaDeAssociacaoEntreReceitaEInsumo(receitaId, insumoId);
+
+        if (!receitaInsumoRepository.verificarExistenciaDaAssociacaoDaReceitaEInsumo(receitaId, insumoId)) {
+            throw new EmpreendedorErrorException("O insumo informado não está associado à receita informada.");
+        }
+    }
+
 
     private void verificarQuantidadeUtilizadaInsumo(BigDecimal quantidadeUtilizadaInsumo) {
         logVerificacaoDeQuantidadeUtilizadaDeInsumo(quantidadeUtilizadaInsumo);
@@ -133,5 +143,39 @@ public class ReceitaInsumoService {
     }
 
 
+    @Transactional
+    public ReceitaInsumoDto atualizarQuantidadeUtilizadaInsumo(Long receitaId, Long insumoId, BigDecimal quantidadeUtilizadaInsumo) {
+        logInicioAtualizacaoQuantidadeUtilizadaInsumo(receitaId, insumoId);
+        verificarExistenciaDaReceitaPeloId(receitaId);
+        verificarExistenciaDoInsumoPeloId(insumoId);
+        verificarSeNaoExisteAssociacaoDeInsumoEReceita(receitaId, insumoId);
+        verificarQuantidadeUtilizadaInsumo(quantidadeUtilizadaInsumo);
 
+        AssociacaoDto associacaoEncontrada = receitaInsumoRepository
+                .obterTodosOsDadosDaAssociacaoPorReceitaIdEInsumoId(receitaId, insumoId);
+
+        ReceitaDto receitaEncontradaDto = associacaoEncontrada.getReceitaDto();
+
+        InsumoDto insumoEncontradoDto = associacaoEncontrada.getInsumoDto();
+
+        BigDecimal valorGastoInsumoAtualizado = calcularGastoComInsumo(insumoEncontradoDto.getQuantidadePorPacote(),
+                insumoEncontradoDto.getValorPagoPorPacote(),
+                quantidadeUtilizadaInsumo);
+
+        ReceitaInsumoDto receitaInsumoEncontradoDto = associacaoEncontrada.getReceitaInsumoDto();
+
+        BigDecimal valorGastoInsumoAntigo = receitaInsumoEncontradoDto.getValorGastoInsumo();
+        BigDecimal totalGastoInsumosAtualizado = receitaEncontradaDto.getTotalGastoInsumos()
+                .subtract(valorGastoInsumoAntigo)
+                .max(BigDecimal.ZERO)
+                .add(valorGastoInsumoAtualizado)
+                .setScale(2, RoundingMode.HALF_EVEN);
+
+        receitaEncontradaDto.setTotalGastoInsumos(totalGastoInsumosAtualizado);
+
+        receitaRepository.atualizarReceita(receitaId, receitaEncontradaDto);
+
+        return receitaInsumoRepository
+                .atualizarReceitaInsumo(receitaId, insumoId, quantidadeUtilizadaInsumo, valorGastoInsumoAtualizado);
+    }
 }
