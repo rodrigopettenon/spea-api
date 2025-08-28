@@ -1,5 +1,6 @@
 package com.spea.api.services;
 
+import com.spea.api.dtos.AssociacaoDto;
 import com.spea.api.dtos.InsumoDto;
 import com.spea.api.dtos.ReceitaDto;
 import com.spea.api.dtos.ReceitaInsumoDto;
@@ -98,35 +99,34 @@ public class InsumoService {
         validarValorPagoPorPacoteDeInsumo(insumoDto.getValorPagoPorPacote());
         verificarSeOInsumoExistePeloId(id);
 
-        List<ReceitaInsumoDto> listaDeInsumosAssociadosAReceitas = receitaInsumoRepository
-                .obterListaDeInsumosAssociadosAReceitasPeloId(id);
+        List<AssociacaoDto> listaDeAssociacoesEReceitasRelacionadasAoMesmoInsumo = receitaInsumoRepository
+                .obterListaDeAssociacoesEReceitasRelacionadasAoMesmoInsumo(id);
 
-        for (ReceitaInsumoDto associacao : listaDeInsumosAssociadosAReceitas) {
+        for (AssociacaoDto associacao : listaDeAssociacoesEReceitasRelacionadasAoMesmoInsumo) {
+            ReceitaInsumoDto receitaInsumoDto = associacao.getReceitaInsumoDto();
+            ReceitaDto receitaDto = associacao.getReceitaDto();
+
             BigDecimal gastoComInsumoAtualizado = receitaInsumoService
                     .calcularGastoComInsumo(insumoDto.getQuantidadePorPacote(),
                     insumoDto.getValorPagoPorPacote(),
-                    associacao.getQuantidadeUtilizadaInsumo());
+                    receitaInsumoDto.getQuantidadeUtilizadaInsumo());
 
-            receitaInsumoRepository.atualizarReceitaInsumo(associacao.getReceitaId(),
-                    associacao.getInsumoId(),
-                    associacao.getQuantidadeUtilizadaInsumo(),
+            receitaInsumoRepository.atualizarReceitaInsumo(receitaInsumoDto.getReceitaId(),
+                    receitaInsumoDto.getInsumoId(),
+                    receitaInsumoDto.getQuantidadeUtilizadaInsumo(),
                     gastoComInsumoAtualizado);
 
-            receitaService.verificarSeAReceitaExistePeloId(associacao.getReceitaId());
-            ReceitaDto receitaAssociada = receitaRepository
-                    .obterReceitaPeloId(associacao.getReceitaId());
-
-            BigDecimal valorGastoInsumoAntigo = associacao.getValorGastoInsumo();
-            BigDecimal totalGastoInsumosAtualizado = receitaAssociada
+            BigDecimal valorGastoInsumoAntigo = receitaInsumoDto.getValorGastoInsumo();
+            BigDecimal totalGastoInsumosAtualizado = receitaDto
                     .getTotalGastoInsumos()
                     .subtract(valorGastoInsumoAntigo)
                     .max(BigDecimal.ZERO)
                     .add(gastoComInsumoAtualizado)
                     .setScale(2, RoundingMode.HALF_EVEN);
 
-            receitaAssociada.setTotalGastoInsumos(totalGastoInsumosAtualizado);
+            receitaDto.setTotalGastoInsumos(totalGastoInsumosAtualizado);
 
-            receitaRepository.atualizarReceita(receitaAssociada.getId(), receitaAssociada);
+            receitaRepository.atualizarReceita(receitaDto.getId(), receitaDto);
         }
 
         return insumoRepository.atualizarInsumo(id, insumoDto);
@@ -146,17 +146,15 @@ public class InsumoService {
         logInicioDeDelecaoDoInsumo(id);
         verificarSeOInsumoExistePeloId(id);
 
-        List<ReceitaInsumoDto> listaDeInsumosAssociadosAReceitas = receitaInsumoRepository
-                .obterListaDeInsumosAssociadosAReceitasPeloId(id);
+        List<AssociacaoDto> listaDeAssociacoesEReceitasRelacionadasAoMesmoInsumo = receitaInsumoRepository
+                .obterListaDeAssociacoesEReceitasRelacionadasAoMesmoInsumo(id);
 
-        for (ReceitaInsumoDto associacao : listaDeInsumosAssociadosAReceitas) {
+        for (AssociacaoDto associacao : listaDeAssociacoesEReceitasRelacionadasAoMesmoInsumo) {
+            ReceitaInsumoDto receitaInsumoDto = associacao.getReceitaInsumoDto();
+            ReceitaDto receitaDto = associacao.getReceitaDto();
 
-            receitaService.verificarSeAReceitaExistePeloId(associacao.getReceitaId());
-            ReceitaDto receitaAssociada = receitaRepository
-                    .obterReceitaPeloId(associacao.getReceitaId());
-
-            BigDecimal totalAtual = receitaAssociada.getTotalGastoInsumos();
-            BigDecimal valorASubtrair = associacao.getValorGastoInsumo();
+            BigDecimal totalAtual = receitaDto.getTotalGastoInsumos();
+            BigDecimal valorASubtrair = receitaInsumoDto.getValorGastoInsumo();
 
             verificarTotalAtualEValorASubtrair(totalAtual, valorASubtrair);
 
@@ -165,9 +163,9 @@ public class InsumoService {
                     .max(BigDecimal.ZERO)
                     .setScale(2, RoundingMode.HALF_EVEN);
 
-            receitaAssociada.setTotalGastoInsumos(valorGastoComInsumoExcluidoAbatido);
+            receitaDto.setTotalGastoInsumos(valorGastoComInsumoExcluidoAbatido);
 
-            receitaRepository.atualizarReceita(receitaAssociada.getId(), receitaAssociada);
+            receitaRepository.atualizarReceita(receitaDto.getId(), receitaDto);
         }
 
         insumoRepository.deletarInsumo(id);

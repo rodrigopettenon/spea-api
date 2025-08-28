@@ -1,5 +1,6 @@
 package com.spea.api.utils;
 
+import jakarta.persistence.PersistenceUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -206,6 +207,9 @@ public class LogUtil {
         logSucesso("obter todos os dados da associação entre", receitaId , insumoId);
     }
 
+    public static void logSucessoAoObterListaDeAssociacoesEReceitasRelacionadasAoMesmoInsumo(Long insumoId) {
+        logSucesso("obter lista de associações e receitas relacionadas ao insumo", insumoId);
+    }
     //LOGS DE ERROS
 
     //Genérico
@@ -280,5 +284,8 @@ public class LogUtil {
         logErroInesperado("obter todos dados da associacao entre", receitaId, insumoId, excecao);
     }
 
+    public static void logErroInesperadoAoObterListaDeAssociacoesEReceitasRelacionadasAoMesmoInsumo(Long insumoId, Exception e) {
+        logErroInesperado("obter lista de associações e receitas relacionadas ao insumo", insumoId, e);
+    }
 
 }

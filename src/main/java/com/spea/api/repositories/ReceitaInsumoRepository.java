@@ -179,6 +179,59 @@ public class ReceitaInsumoRepository {
         }
     }
 
+    public List<AssociacaoDto> obterListaDeAssociacoesEReceitasRelacionadasAoMesmoInsumo(Long insumoId) {
+        try{
+            StringBuilder sql = new StringBuilder();
+            sql.append(" SELECT ri.insumo_id, ri.receita_id, ri.quantidade_utilizada_insumo, ri.valor_gasto_insumo, ");
+            sql.append(" r.id, r.nome, r.total_gasto_insumos ");
+            sql.append(" FROM tb_receita_insumo AS ri ");
+            sql.append(" JOIN tb_receitas AS r ON ri.receita_id = r.id ");
+            sql.append(" WHERE ri.insumo_id = :insumoId ");
+
+            Query query = em.createNativeQuery(sql.toString())
+                    .setParameter("insumoId", insumoId);
+
+            List<Object[]> listaDeResultados = query.getResultList();
+
+            List<AssociacaoDto> listaDeAssociacoesEReceitasEncontradas = new ArrayList<>();
+            for (Object[] resultado : listaDeResultados) {
+
+                AssociacaoDto associacaoEncontrada = new AssociacaoDto();
+                ReceitaInsumoDto receitaInsumoDto = new ReceitaInsumoDto();
+                ReceitaDto receitaDto = new ReceitaDto();
+
+                receitaInsumoDto.setInsumoId(((Number) resultado[0]).longValue());
+                receitaInsumoDto.setReceitaId(((Number) resultado[1]).longValue());
+                BigDecimal quantidadeUtilizadaInsumo = new BigDecimal(resultado[2].toString())
+                        .setScale(2, RoundingMode.HALF_EVEN);
+                receitaInsumoDto.setQuantidadeUtilizadaInsumo(quantidadeUtilizadaInsumo);
+                BigDecimal valorGastoInsumo = new BigDecimal(resultado[3].toString())
+                        .setScale(2, RoundingMode.HALF_EVEN);
+                receitaInsumoDto.setValorGastoInsumo(valorGastoInsumo);
+
+
+                receitaDto.setId(((Number) resultado[4]).longValue());
+                receitaDto.setNome((String) resultado[5]);
+                BigDecimal totalGastoInsumos = new BigDecimal(resultado[6].toString())
+                        .setScale(2, RoundingMode.HALF_EVEN);
+                receitaDto.setTotalGastoInsumos(totalGastoInsumos);
+
+                associacaoEncontrada.setReceitaInsumoDto(receitaInsumoDto);
+                associacaoEncontrada.setReceitaDto(receitaDto);
+
+                listaDeAssociacoesEReceitasEncontradas.add(associacaoEncontrada);
+            }
+
+            logSucessoAoObterListaDeAssociacoesEReceitasRelacionadasAoMesmoInsumo(insumoId);
+            return listaDeAssociacoesEReceitasEncontradas;
+
+        } catch (Exception e) {
+            logErroInesperadoAoObterListaDeAssociacoesEReceitasRelacionadasAoMesmoInsumo(insumoId, e);
+            throw new EmpreendedorErrorException(String
+                    .format("Erro inesperado ao obter lista de associações e receitas relacionadas ao insumo %d.", insumoId));
+        }
+    }
+
     public ReceitaInsumoDto obterAssociacaoPorReceitaIdEInsumoId(Long receitaId, Long insumoId) {
         try{
             StringBuilder sql = new StringBuilder();
