@@ -1,6 +1,5 @@
 package com.spea.api.utils;
 
-import jakarta.persistence.PersistenceUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,6 +55,10 @@ public class LogUtil {
 
     public static void logInicioDeObtencaoDaReceitaPorId(Long receitaId) {
         logInicioDeProcesso("obtenção de receita pelo id", receitaId);
+    }
+
+    public static void logInicioObtencaoDeListaDeReceitas() {
+        logInicioDeProcesso("obtenção de lista das receitas", null);
     }
 
     // Receita-Insumo
@@ -186,6 +189,10 @@ public class LogUtil {
         logSucesso("obter receita pelo id", id);
     }
 
+    public static void logSucessoAoObterListaDeReceitas() {
+        logSucesso("obter lista de receitas", null);
+    }
+
     // Receita-Insumo
     public static void logSucessoAoCriarAssociacaoEntreReceitaEInsumo(Long receitaId, Long insumoId) {
         logSucesso("criar associação entre", receitaId, insumoId);
@@ -261,6 +268,10 @@ public class LogUtil {
 
     public static void logErroInesperadoAoObterReceitaPeloId(Object identificador, Exception excecao) {
         logErroInesperado("obter receita pelo id", identificador, excecao);
+    }
+
+    public static void logErroInesperadoAoObterListaDeReceitas(Exception excecao) {
+        logErroInesperado("obter lista de receitas", null, excecao);
     }
 
     // Receita-Insumo

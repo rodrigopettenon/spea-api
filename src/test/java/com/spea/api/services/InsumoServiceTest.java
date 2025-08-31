@@ -369,7 +369,7 @@ class InsumoServiceTest {
         verify(receitaInsumoRepository).obterListaDeAssociacoesEReceitasRelacionadasAoMesmoInsumo(id);
         verify(insumoRepository).atualizarInsumo(id, insumoDto);
         verify(receitaInsumoRepository, never()).atualizarReceitaInsumo(any(), any(), any(), any());
-        verify(receitaRepository, never()).atualizarReceita(any(), any());
+        verify(receitaRepository, never()).atualizarTotalGastoInsumosDaReceita(any(), any());
     }
 
     @Test
@@ -433,10 +433,10 @@ class InsumoServiceTest {
 
         // Verifica que os totais das receitas foram atualizados
         ArgumentCaptor<ReceitaDto> receitaDtoCaptor = ArgumentCaptor.forClass(ReceitaDto.class);
-        verify(receitaRepository).atualizarReceita(eq(1L), receitaDtoCaptor.capture());
+        verify(receitaRepository).atualizarTotalGastoInsumosDaReceita(eq(1L), receitaDtoCaptor.capture());
         assertEquals(0, new BigDecimal("50.00").compareTo(receitaDtoCaptor.getValue().getTotalGastoInsumos()));
 
-        verify(receitaRepository).atualizarReceita(eq(2L), receitaDtoCaptor.capture());
+        verify(receitaRepository).atualizarTotalGastoInsumosDaReceita(eq(2L), receitaDtoCaptor.capture());
         assertEquals(0, new BigDecimal("75.00").compareTo(receitaDtoCaptor.getValue().getTotalGastoInsumos()));
     }
 
@@ -481,7 +481,7 @@ class InsumoServiceTest {
 
         // Assert - Verifica que o total não ficou negativo
         ArgumentCaptor<ReceitaDto> receitaDtoCaptor = ArgumentCaptor.forClass(ReceitaDto.class);
-        verify(receitaRepository).atualizarReceita(eq(1L), receitaDtoCaptor.capture());
+        verify(receitaRepository).atualizarTotalGastoInsumosDaReceita(eq(1L), receitaDtoCaptor.capture());
 
         // Cálculo: 10.00 - 15.00 (antigo) = -5.00 → max(0) = 0.00 + 2.00 (novo) = 2.00
         assertEquals(0, new BigDecimal("2.00").compareTo(receitaDtoCaptor.getValue().getTotalGastoInsumos()));
@@ -511,7 +511,7 @@ class InsumoServiceTest {
         verify(receitaInsumoRepository).obterListaDeAssociacoesEReceitasRelacionadasAoMesmoInsumo(id);
         verify(insumoRepository).deletarInsumo(id);
         verify(receitaRepository, never()).obterReceitaPeloId(any());
-        verify(receitaRepository, never()).atualizarReceita(any(), any());
+        verify(receitaRepository, never()).atualizarTotalGastoInsumosDaReceita(any(), any());
     }
 
     @Test
@@ -555,17 +555,17 @@ class InsumoServiceTest {
         when(insumoRepository.verificarExistenciaDoInsumoPeloId(id)).thenReturn(true);
         when(receitaInsumoRepository.obterListaDeAssociacoesEReceitasRelacionadasAoMesmoInsumo(id))
                 .thenReturn(associacoesCompletas);
-        when(receitaRepository.atualizarReceita(eq(1L), any(ReceitaDto.class))).thenReturn(receitaAtualizada1);
-        when(receitaRepository.atualizarReceita(eq(2L), any(ReceitaDto.class))).thenReturn(receitaAtualizada2);
+        when(receitaRepository.atualizarTotalGastoInsumosDaReceita(eq(1L), any(ReceitaDto.class))).thenReturn(receitaAtualizada1);
+        when(receitaRepository.atualizarTotalGastoInsumosDaReceita(eq(2L), any(ReceitaDto.class))).thenReturn(receitaAtualizada2);
         doNothing().when(insumoRepository).deletarInsumo(id);
 
         // Act
         insumoService.deletarInsumo(id);
 
         // Assert - Verifica que os totais foram atualizados corretamente
-        verify(receitaRepository).atualizarReceita(eq(1L), argThat(dto ->
+        verify(receitaRepository).atualizarTotalGastoInsumosDaReceita(eq(1L), argThat(dto ->
                 dto.getTotalGastoInsumos().equals(new BigDecimal("124.75")))); // 150 - 25.25
-        verify(receitaRepository).atualizarReceita(eq(2L), argThat(dto ->
+        verify(receitaRepository).atualizarTotalGastoInsumosDaReceita(eq(2L), argThat(dto ->
                 dto.getTotalGastoInsumos().equals(new BigDecimal("181.25")))); // 200 - 18.75
         verify(insumoRepository).deletarInsumo(id);
     }
@@ -596,7 +596,7 @@ class InsumoServiceTest {
         when(insumoRepository.verificarExistenciaDoInsumoPeloId(id)).thenReturn(true);
         when(receitaInsumoRepository.obterListaDeAssociacoesEReceitasRelacionadasAoMesmoInsumo(id))
                 .thenReturn(associacoesCompletas);
-        when(receitaRepository.atualizarReceita(eq(1L), any(ReceitaDto.class))).thenReturn(receitaAtualizada);
+        when(receitaRepository.atualizarTotalGastoInsumosDaReceita(eq(1L), any(ReceitaDto.class))).thenReturn(receitaAtualizada);
         doNothing().when(insumoRepository).deletarInsumo(id);
 
         // Act
@@ -604,7 +604,7 @@ class InsumoServiceTest {
 
         // Assert - Verifica que o método foi chamado e captura o argumento
         ArgumentCaptor<ReceitaDto> receitaDtoCaptor = ArgumentCaptor.forClass(ReceitaDto.class);
-        verify(receitaRepository).atualizarReceita(eq(1L), receitaDtoCaptor.capture());
+        verify(receitaRepository).atualizarTotalGastoInsumosDaReceita(eq(1L), receitaDtoCaptor.capture());
 
         ReceitaDto dtoAtualizado = receitaDtoCaptor.getValue();
         assertEquals(0, new BigDecimal("0.00").compareTo(dtoAtualizado.getTotalGastoInsumos()));
@@ -644,7 +644,7 @@ class InsumoServiceTest {
         verify(insumoRepository, never()).deletarInsumo(any());
 
         // Verifica que não houve tentativa de atualizar a receita
-        verify(receitaRepository, never()).atualizarReceita(any(), any());
+        verify(receitaRepository, never()).atualizarTotalGastoInsumosDaReceita(any(), any());
     }
 
     @Test
@@ -679,7 +679,7 @@ class InsumoServiceTest {
         verify(insumoRepository, never()).deletarInsumo(any());
 
         // Verifica que não houve tentativa de atualizar a receita
-        verify(receitaRepository, never()).atualizarReceita(any(), any());
+        verify(receitaRepository, never()).atualizarTotalGastoInsumosDaReceita(any(), any());
     }
 
     @Test

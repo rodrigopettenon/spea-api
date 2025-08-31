@@ -101,34 +101,30 @@ class ReceitaRepositoryTest {
         verify(em).createNativeQuery(anyString());
     }
 
-    // Método atualizarReceita
+    // Método atualizarTotalGastoInsumosDaReceita
     @Test
     @DisplayName("Deve atualizar receita com sucesso")
     void deveAtualizarReceitaComSucesso() {
         // Arrange
         Long id = 1L;
         ReceitaDto receitaDto = new ReceitaDto();
-        receitaDto.setNome("Pizza Atualizada");
         receitaDto.setTotalGastoInsumos(new BigDecimal("25.50"));
 
-        String sqlEsperada = " UPDATE tb_receitas  SET nome = :nome,  total_gasto_insumos = :total_gasto_insumos  WHERE id = :id LIMIT 1 ";
+        String sqlEsperada = " UPDATE tb_receitas  SET total_gasto_insumos = :total_gasto_insumos  WHERE id = :id LIMIT 1 ";
 
         when(em.createNativeQuery(sqlEsperada)).thenReturn(query);
-        when(query.setParameter("nome", receitaDto.getNome())).thenReturn(query);
         when(query.setParameter("total_gasto_insumos", receitaDto.getTotalGastoInsumos())).thenReturn(query);
         when(query.setParameter("id", id)).thenReturn(query);
         when(query.executeUpdate()).thenReturn(1);
 
         // Act
-        ReceitaDto resultado = receitaRepository.atualizarReceita(id, receitaDto);
+        ReceitaDto resultado = receitaRepository.atualizarTotalGastoInsumosDaReceita(id, receitaDto);
 
         // Assert
         assertNotNull(resultado);
-        assertEquals(receitaDto.getNome(), resultado.getNome());
         assertEquals(receitaDto.getTotalGastoInsumos(), resultado.getTotalGastoInsumos());
 
         verify(em).createNativeQuery(sqlEsperada);
-        verify(query).setParameter("nome", receitaDto.getNome());
         verify(query).setParameter("total_gasto_insumos", receitaDto.getTotalGastoInsumos());
         verify(query).setParameter("id", id);
         verify(query).executeUpdate();
@@ -149,7 +145,7 @@ class ReceitaRepositoryTest {
 
         // Act & Assert
         EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class,
-                () -> receitaRepository.atualizarReceita(id, receitaDto));
+                () -> receitaRepository.atualizarTotalGastoInsumosDaReceita(id, receitaDto));
 
         assertEquals("Erro inesperado ao atualizar receita.", excecao.getMessage());
         verify(em).createNativeQuery(anyString());
@@ -170,7 +166,7 @@ class ReceitaRepositoryTest {
         when(query.executeUpdate()).thenReturn(1);
 
         // Act
-        ReceitaDto resultado = receitaRepository.atualizarReceita(id, receitaDto);
+        ReceitaDto resultado = receitaRepository.atualizarTotalGastoInsumosDaReceita(id, receitaDto);
 
         // Assert
         assertSame(receitaDto, resultado);

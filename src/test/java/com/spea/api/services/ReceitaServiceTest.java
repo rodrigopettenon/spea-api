@@ -119,7 +119,7 @@ class ReceitaServiceTest {
         verify(receitaRepository).cadastrarReceita(receitaDto);
     }
 
-    // Método atualizarReceita
+    // Método atualizarTotalGastoInsumosDaReceita
     @Test
     @DisplayName("Deve atualizar receita com sucesso quando dados forem válidos")
     void deveAtualizarReceitaComSucesso() {
@@ -133,10 +133,10 @@ class ReceitaServiceTest {
         receitaAtualizada.setNome("Pizza Margherita Atualizada");
 
         when(receitaRepository.verificarExistenciaDaReceitaPeloId(id)).thenReturn(true);
-        when(receitaRepository.atualizarReceita(id, receitaDto)).thenReturn(receitaAtualizada);
+        when(receitaRepository.atualizarNomeDaReceita(id, receitaDto)).thenReturn(receitaAtualizada);
 
         // Act
-        ReceitaDto resultado = receitaService.atualizarReceita(id, receitaDto);
+        ReceitaDto resultado = receitaService.atualizarNomeDaReceita(id, receitaDto);
 
         // Assert
         assertNotNull(resultado);
@@ -144,7 +144,7 @@ class ReceitaServiceTest {
         assertEquals("Pizza Margherita Atualizada", resultado.getNome());
 
         verify(receitaRepository).verificarExistenciaDaReceitaPeloId(id);
-        verify(receitaRepository).atualizarReceita(id, receitaDto);
+        verify(receitaRepository).atualizarNomeDaReceita(id, receitaDto);
     }
 
     @Test
@@ -159,11 +159,11 @@ class ReceitaServiceTest {
 
         // Act & Assert
         EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class,
-                () -> receitaService.atualizarReceita(id, receitaDto));
+                () -> receitaService.atualizarNomeDaReceita(id, receitaDto));
 
         assertEquals("O ID da receita informado não está cadastrado.", excecao.getMessage());
         verify(receitaRepository).verificarExistenciaDaReceitaPeloId(id);
-        verify(receitaRepository, never()).atualizarReceita(any(), any());
+        verify(receitaRepository, never()).atualizarNomeDaReceita(any(), any());
     }
 
     @Test
@@ -176,10 +176,10 @@ class ReceitaServiceTest {
 
         // Act & Assert
         EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class,
-                () -> receitaService.atualizarReceita(id, receitaDto));
+                () -> receitaService.atualizarNomeDaReceita(id, receitaDto));
 
         assertEquals("O nome da receita é obrigatório", excecao.getMessage());
-        verify(receitaRepository, never()).atualizarReceita(any(), any());
+        verify(receitaRepository, never()).atualizarNomeDaReceita(any(), any());
     }
 
 

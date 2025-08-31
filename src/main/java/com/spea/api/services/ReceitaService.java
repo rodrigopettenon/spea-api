@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 import static com.spea.api.utils.LogUtil.*;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -37,13 +39,13 @@ public class ReceitaService {
         }
     }
 
-    public ReceitaDto atualizarReceita(Long id, ReceitaDto receitaDto) {
+    public ReceitaDto atualizarNomeDaReceita(Long id, ReceitaDto receitaDto) {
         logInicioAtualizacaoDaReceita(id);
 
         validarNomeDaReceita(receitaDto.getNome());
         verificarSeAReceitaExistePeloId(id);
 
-        return receitaRepository.atualizarReceita(id, receitaDto);
+        return receitaRepository.atualizarNomeDaReceita(id, receitaDto);
     }
 
     protected void verificarSeAReceitaExistePeloId(Long id) {
@@ -53,5 +55,11 @@ public class ReceitaService {
             throw new EmpreendedorErrorException("O ID da receita informado não está cadastrado.");
         }
 
+    }
+
+    public List<ReceitaDto> obterListaDeReceitas() {
+        logInicioObtencaoDeListaDeReceitas();
+
+        return receitaRepository.obterListaDeReceitas();
     }
 }

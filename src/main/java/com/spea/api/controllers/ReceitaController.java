@@ -18,10 +18,14 @@ public class ReceitaController extends BaseController {
         return createObjectReturn(receitaService.cadastrarReceita(receitaDto));
     }
 
-    @PutMapping("/atualizar/{id}")
-    public ResponseEntity<?> atualizarReceita(@PathVariable(name = "id") Long id,
+    @PutMapping("/atualizar-nome/{id}")
+    public ResponseEntity<?> atualizarNomeDaReceita(@PathVariable(name = "id") Long id,
                                               @RequestBody ReceitaDto receitaDto) {
-        return createObjectReturn(receitaService.atualizarReceita(id, receitaDto));
+        return createObjectReturn(receitaService.atualizarNomeDaReceita(id, receitaDto));
     }
 
+    @GetMapping("/lista")
+    public ResponseEntity<?> obterListaDeReceitas() {
+        return createObjectReturn(receitaService.obterListaDeReceitas());
+    }
 }

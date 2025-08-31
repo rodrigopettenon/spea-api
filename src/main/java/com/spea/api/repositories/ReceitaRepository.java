@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.spea.api.utils.LogUtil.*;
@@ -72,16 +73,14 @@ public class ReceitaRepository {
         }
     }
 
-    public ReceitaDto atualizarReceita(Long id, ReceitaDto receitaDto) {
+    public ReceitaDto atualizarTotalGastoInsumosDaReceita(Long id, ReceitaDto receitaDto) {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append(" UPDATE tb_receitas ");
-            sql.append(" SET nome = :nome, ");
-            sql.append(" total_gasto_insumos = :total_gasto_insumos ");
+            sql.append(" SET total_gasto_insumos = :total_gasto_insumos ");
             sql.append(" WHERE id = :id LIMIT 1 ");
 
             Query query = em.createNativeQuery(sql.toString())
-                    .setParameter("nome", receitaDto.getNome())
                     .setParameter("total_gasto_insumos", receitaDto.getTotalGastoInsumos())
                     .setParameter("id", id);
 
@@ -116,6 +115,61 @@ public class ReceitaRepository {
         }catch (Exception e) {
             logErroInesperadoAoVerificarExistenciaDaReceita(id, e);
             throw new EmpreendedorErrorException("Erro inesperado ao verificar existência da receita pelo id.");
+        }
+    }
+
+    public List<ReceitaDto> obterListaDeReceitas() {
+        try{
+            String sql = " SELECT id, nome, total_gasto_insumos FROM tb_receitas ";
+
+            Query query = em.createNativeQuery(sql);
+
+            List<Object[]> listaDeResultados =  query.getResultList();
+
+            List<ReceitaDto> listaDeReceitas = new ArrayList<>();
+            for (Object[] resultado : listaDeResultados) {
+                ReceitaDto receitaDto = new ReceitaDto();
+
+                receitaDto.setId(((Number) resultado[0]).longValue());
+                receitaDto.setNome((String) resultado[1]);
+                BigDecimal totalGastoInsumos = new BigDecimal(resultado[2].toString())
+                        .setScale(2, RoundingMode.HALF_EVEN);
+                receitaDto.setTotalGastoInsumos(totalGastoInsumos);
+
+                listaDeReceitas.add(receitaDto);
+            }
+
+            logSucessoAoObterListaDeReceitas();
+            return listaDeReceitas;
+        } catch (Exception e) {
+            logErroInesperadoAoObterListaDeReceitas(e);
+            throw new EmpreendedorErrorException("Erro inesperado ao obter a lista de receitas.");
+        }
+    }
+
+    public ReceitaDto atualizarNomeDaReceita(Long id, ReceitaDto receitaDto) {
+        try{
+            StringBuilder sql = new StringBuilder();
+            sql.append(" UPDATE tb_receitas ");
+            sql.append(" SET nome = :nome ");
+            sql.append(" WHERE id = :id LIMIT 1 ");
+
+            Query query = em.createNativeQuery(sql.toString())
+                    .setParameter("nome", receitaDto.getNome())
+                    .setParameter("id", id);
+
+            query.executeUpdate();
+            logSucessoAoAtualizarReceita(id);
+
+            ReceitaDto receitaDtoAtualizada = new ReceitaDto();
+            receitaDtoAtualizada.setId(id);
+            receitaDtoAtualizada.setNome(receitaDto.getNome());
+
+            logSucessoAoAtualizarReceita(id);
+            return receitaDto;
+        } catch (Exception e) {
+            logErroInesperadoAoAtualizarReceita(id, e);
+            throw new EmpreendedorErrorException("Erro inesperado ao atualizar o nome da receita.");
         }
     }
 }

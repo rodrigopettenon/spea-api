@@ -56,7 +56,7 @@ public class ReceitaInsumoService {
         receitaAtualizadaDto.setNome(receitaEncontradaDto.getNome());
         receitaAtualizadaDto.setTotalGastoInsumos(totalGastoInsumosAtualizado);
 
-        receitaRepository.atualizarReceita(receitaId, receitaAtualizadaDto);
+        receitaRepository.atualizarTotalGastoInsumosDaReceita(receitaId, receitaAtualizadaDto);
 
         return receitaInsumoRepository.criarAssociacao(receitaId, insumoId, quantidadeUtilizadaInsumo, valorGastoInsumo);
     }
@@ -173,7 +173,7 @@ public class ReceitaInsumoService {
 
         receitaEncontradaDto.setTotalGastoInsumos(totalGastoInsumosAtualizado);
 
-        receitaRepository.atualizarReceita(receitaId, receitaEncontradaDto);
+        receitaRepository.atualizarTotalGastoInsumosDaReceita(receitaId, receitaEncontradaDto);
 
         return receitaInsumoRepository
                 .atualizarReceitaInsumo(receitaId, insumoId, quantidadeUtilizadaInsumo, valorGastoInsumoAtualizado);

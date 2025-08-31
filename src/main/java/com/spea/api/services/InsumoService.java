@@ -126,7 +126,7 @@ public class InsumoService {
 
             receitaDto.setTotalGastoInsumos(totalGastoInsumosAtualizado);
 
-            receitaRepository.atualizarReceita(receitaDto.getId(), receitaDto);
+            receitaRepository.atualizarTotalGastoInsumosDaReceita(receitaDto.getId(), receitaDto);
         }
 
         return insumoRepository.atualizarInsumo(id, insumoDto);
@@ -165,7 +165,7 @@ public class InsumoService {
 
             receitaDto.setTotalGastoInsumos(valorGastoComInsumoExcluidoAbatido);
 
-            receitaRepository.atualizarReceita(receitaDto.getId(), receitaDto);
+            receitaRepository.atualizarTotalGastoInsumosDaReceita(receitaDto.getId(), receitaDto);
         }
 
         insumoRepository.deletarInsumo(id);
