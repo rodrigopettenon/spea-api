@@ -48,4 +48,14 @@ public class ReceitaInsumoController extends BaseController{
                 .atualizarQuantidadeUtilizadaInsumo(receitaId, insumoId, quantidadeUtilizadaInsumo));
     }
 
+    @GetMapping("/lista-insumos-associados/receita/{receitaId}")
+    public ResponseEntity<?> obterListaDeInsumosAssociadosAReceitaFiltradosEPaginados(@PathVariable(name = "receitaId") Long receitaId,
+                                                                                      @RequestParam(required = false) String nomeInsumo,
+                                                                                      @RequestParam(defaultValue = "0") Integer paginaAtual,
+                                                                                      @RequestParam(defaultValue = "asc") String direcao,
+                                                                                      @RequestParam(defaultValue = "nomeInsumo") String ordenarPor) {
+        return createObjectReturn(receitaInsumoService
+                .obterListaDeInsumosAssociadosAReceitaFiltradosEPaginados(receitaId, nomeInsumo, paginaAtual, direcao, ordenarPor));
+    }
+
 }

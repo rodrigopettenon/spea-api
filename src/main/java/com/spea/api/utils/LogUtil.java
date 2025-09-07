@@ -79,6 +79,10 @@ public class LogUtil {
         logInicioDeProcessoAssociacao("atualização da quantidade utilizada de insumos da associação entre", receitaId, insumoId);
     }
 
+    public static void logInicioObtencaoDaListaFiltradaEPaginadaDeInsumosAssociadosAReceita(Long receitaId) {
+        logInicioDeProcesso("obtenção da lista filtrada e paginadade de insumos associados a receita", receitaId);
+    }
+
 
     // LOGS DE VALIDAÇÕES
 
@@ -217,6 +221,15 @@ public class LogUtil {
     public static void logSucessoAoObterListaDeAssociacoesEReceitasRelacionadasAoMesmoInsumo(Long insumoId) {
         logSucesso("obter lista de associações e receitas relacionadas ao insumo", insumoId);
     }
+
+    public static void logSucessoAoObterTotalDeInsumosAssociadosAReceita(Long receitaId) {
+        logSucesso("obter total de insumos associados à receita", receitaId);
+    }
+
+    public static void logSucessoAoObterListaFiltradaEPaginadaDeInsumosAssociadosAReceita(Long receitaId) {
+        logSucesso("obter lista de insumos associados à receita", receitaId);
+    }
+
     //LOGS DE ERROS
 
     //Genérico
@@ -297,6 +310,14 @@ public class LogUtil {
 
     public static void logErroInesperadoAoObterListaDeAssociacoesEReceitasRelacionadasAoMesmoInsumo(Long insumoId, Exception e) {
         logErroInesperado("obter lista de associações e receitas relacionadas ao insumo", insumoId, e);
+    }
+
+    public static void logErroInesperadoAoObterTotalDeInsumosAssociadosAReceita(Long receitaId, Exception excecao) {
+        logErroInesperado("obter total de insumos associados à receita", receitaId, excecao);
+    }
+
+    public static void logErroInesperadoAoObterListaFiltradaEPaginadaDeInsumosAssociadosAReceita(Long receitaId, Exception excecao) {
+        logErroInesperado("obter lista de insumos associados à receita", receitaId, excecao);
     }
 
 }

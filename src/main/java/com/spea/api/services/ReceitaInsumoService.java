@@ -1,9 +1,6 @@
 package com.spea.api.services;
 
-import com.spea.api.dtos.AssociacaoDto;
-import com.spea.api.dtos.InsumoDto;
-import com.spea.api.dtos.ReceitaDto;
-import com.spea.api.dtos.ReceitaInsumoDto;
+import com.spea.api.dtos.*;
 import com.spea.api.exceptions.EmpreendedorErrorException;
 import com.spea.api.repositories.InsumoRepository;
 import com.spea.api.repositories.ReceitaInsumoRepository;
@@ -14,13 +11,27 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.*;
 
 import static com.spea.api.utils.LogUtil.*;
+import static com.spea.api.utils.StringUtil.normalizarEspacos;
 import static java.util.Objects.isNull;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Service
 @Transactional
 public class ReceitaInsumoService {
+
+    private static final Integer ITENS_POR_PAGINA = 10;
+    private static final List<String> DIRECAO_PERMITIDA = Arrays.asList("asc", "desc");
+    private static final Map<String, String> MAP_ORDERNAR_POR_PERMITIDOS;
+    static {
+        Map<String, String> map = new HashMap<>();
+        map.put("nomeInsumo", "i.nome");
+        map.put("quantidadeUtilizadaInsumo", "ri.quantidade_utilizada_insumo");
+        map.put("valorGastoInsumo", "ri.valor_gasto_insumo");
+        MAP_ORDERNAR_POR_PERMITIDOS = Collections.unmodifiableMap(map);
+    }
 
     @Autowired
     private ReceitaInsumoRepository receitaInsumoRepository;
@@ -178,4 +189,63 @@ public class ReceitaInsumoService {
         return receitaInsumoRepository
                 .atualizarReceitaInsumo(receitaId, insumoId, quantidadeUtilizadaInsumo, valorGastoInsumoAtualizado);
     }
+
+    public GlobalPageDto<ReceitaInsumoDto> obterListaDeInsumosAssociadosAReceitaFiltradosEPaginados(Long receitaId, String nomeInsumo,
+                                                                                  Integer paginaAtual, String direcao,
+                                                                                  String ordenarPor) {
+        logInicioObtencaoDaListaFiltradaEPaginadaDeInsumosAssociadosAReceita(receitaId);
+        verificarExistenciaDaReceitaPeloId(receitaId);
+
+        String nomeSemEspacosExtras = normalizarEspacos(nomeInsumo);
+        String direcaoCorrigida = corrigirDirecao(direcao);
+        String ordenarPorCorrigido = corrigirOrdenarPor(ordenarPor);
+
+        Long totalDeInsumos = receitaInsumoRepository
+                .obterTotalDeInsumosAssociadosAReceitaQuery(receitaId, nomeSemEspacosExtras);
+
+
+        Integer paginaAtualCorrigida = corrigirPaginaAtual(paginaAtual, totalDeInsumos, ITENS_POR_PAGINA);
+
+
+        return receitaInsumoRepository
+                .obterListaFiltradaEPaginadaDeInsumosAssociadosAReceita(receitaId, nomeSemEspacosExtras, paginaAtualCorrigida,
+                        ITENS_POR_PAGINA, direcaoCorrigida, ordenarPorCorrigido);
+    }
+
+
+    private Integer corrigirPaginaAtual(Integer paginaAtual, Long totalDeInsumos, Integer itensPorPagina) {
+        if (isNull(paginaAtual) || paginaAtual < 0) {
+            return 0;
+        }
+
+        if (itensPorPagina == null || itensPorPagina <= 0) {
+            return 0;
+        }
+
+        int totalDePaginas = (int) Math.ceil((double) totalDeInsumos / itensPorPagina);
+
+        if (totalDePaginas == 0) {
+            return 0;
+        }
+
+        if (paginaAtual >= totalDePaginas) {
+            return totalDePaginas - 1;
+        }
+
+        return paginaAtual;
+    }
+
+
+    private String corrigirDirecao(String direcao) {
+        if (isBlank(direcao) || !DIRECAO_PERMITIDA.contains(direcao.toLowerCase())) {
+            return "asc";
+        }
+        return direcao.toLowerCase();
+    }
+
+    private String corrigirOrdenarPor(String ordenarPor) {
+        return MAP_ORDERNAR_POR_PERMITIDOS.getOrDefault(ordenarPor, "i.nome");
+    }
+
+
 }

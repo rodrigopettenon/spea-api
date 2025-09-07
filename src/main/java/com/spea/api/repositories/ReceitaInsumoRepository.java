@@ -1,9 +1,6 @@
 package com.spea.api.repositories;
 
-import com.spea.api.dtos.AssociacaoDto;
-import com.spea.api.dtos.InsumoDto;
-import com.spea.api.dtos.ReceitaDto;
-import com.spea.api.dtos.ReceitaInsumoDto;
+import com.spea.api.dtos.*;
 import com.spea.api.exceptions.EmpreendedorErrorException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -15,9 +12,12 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.spea.api.utils.LogUtil.*;
+import static org.apache.commons.lang3.StringUtils.*;
 
 @Repository
 public class ReceitaInsumoRepository {
@@ -306,6 +306,122 @@ public class ReceitaInsumoRepository {
         } catch (Exception e) {
             logErroInesperadoAoObterListaDeInsumosAssociadosAReceitasPeloId(insumoId, e);
             throw new EmpreendedorErrorException("Erro inesperado ao obter lista de insumos associados à receitas pelo id.");
+        }
+    }
+
+    public GlobalPageDto<ReceitaInsumoDto> obterListaFiltradaEPaginadaDeInsumosAssociadosAReceita(Long receitaId,
+                                                                                                    String nomeInsumo,
+                                                                                                    Integer paginaAtual,
+                                                                                                    Integer itensPorPagina,
+                                                                                                    String direcao,
+                                                                                                    String ordenarPor) {
+        Long totalDeInsumosAssociadosAReceita =
+                obterTotalDeInsumosAssociadosAReceitaQuery(receitaId, nomeInsumo);
+
+        List<ReceitaInsumoDto> listaDeInsumosAssociadosAReceitaFiltradosEPaginados =
+                obterListaFiltradaEPaginadaDeInsumosAssociadosAReceitaQuery(receitaId, nomeInsumo,
+                        paginaAtual,itensPorPagina, direcao, ordenarPor);
+
+        GlobalPageDto<ReceitaInsumoDto> insumosAssociadosAReceitaPaginaveis =
+                new GlobalPageDto<>(listaDeInsumosAssociadosAReceitaFiltradosEPaginados,
+                        totalDeInsumosAssociadosAReceita,
+                        paginaAtual, itensPorPagina);
+
+        return insumosAssociadosAReceitaPaginaveis;
+    }
+
+    public Long obterTotalDeInsumosAssociadosAReceitaQuery(Long receitaId, String nomeInsumo) {
+        try{
+            Map<String, Object> parametros = new HashMap<>();
+            StringBuilder sql = new StringBuilder();
+
+            sql.append(" SELECT COUNT(*) FROM tb_receita_insumo AS ri ");
+            sql.append(" JOIN tb_insumos AS i ON ri.insumo_id = i.id ");
+            sql.append(" WHERE 1=1 AND ri.receita_id = :receitaId ");
+
+            if (isNotBlank(nomeInsumo)) {
+                sql.append(" AND LOWER(i.nome) LIKE LOWER(:nomeInsumo) ");
+                parametros.put("nomeInsumo", "%" + nomeInsumo + "%");
+            }
+
+            Query query = em.createNativeQuery(sql.toString())
+                    .setParameter("receitaId", receitaId);
+
+            setQueryParameters(parametros, query);
+
+            Object resultado = query.getSingleResult();
+            Number totalDeItens = (Number) resultado;
+
+            logSucessoAoObterTotalDeInsumosAssociadosAReceita(receitaId);
+            return totalDeItens.longValue();
+
+        } catch (Exception e) {
+            logErroInesperadoAoObterTotalDeInsumosAssociadosAReceita(receitaId, e);
+            throw new EmpreendedorErrorException("Erro inesperado ao obter total de insumos associados à receita informada.");
+        }
+    }
+
+    private List<ReceitaInsumoDto> obterListaFiltradaEPaginadaDeInsumosAssociadosAReceitaQuery(Long receitaId,
+                                                                                                 String nomeInsumo,
+                                                                                                 Integer paginaAtual,
+                                                                                                 Integer itensPorPagina,
+                                                                                                 String direcao,
+                                                                                                 String ordenarPor) {
+        try {
+            Map<String, Object> parametros = new HashMap<>();
+
+            StringBuilder sql = new StringBuilder();
+            sql.append(" SELECT i.nome, ri.quantidade_utilizada_insumo, ri.valor_gasto_insumo ");
+            sql.append(" FROM tb_receita_insumo AS ri ");
+            sql.append(" JOIN tb_insumos AS i ON ri.insumo_id = i.id ");
+            sql.append(" WHERE 1=1 AND ri.receita_id = :receitaId ");
+
+            if (isNotBlank(nomeInsumo)) {
+                sql.append(" AND LOWER(i.nome) LIKE LOWER(:nomeInsumo) ");
+                parametros.put("nomeInsumo", "%" + nomeInsumo + "%");
+            }
+
+            sql.append(" ORDER BY ").append(ordenarPor).append(" ").append(direcao).append(" ");
+            sql.append(" LIMIT :limit OFFSET :offset ");
+
+            Query query = em.createNativeQuery(sql.toString())
+                    .setParameter("receitaId", receitaId)
+                    .setParameter("limit", itensPorPagina)
+                    .setParameter("offset", paginaAtual * itensPorPagina);
+
+            setQueryParameters(parametros, query);
+
+            List<Object[]> listaDeResultados = query.getResultList();
+            List<ReceitaInsumoDto> listaDeInsumosAssociadosAReceita = new ArrayList<>();
+
+            for (Object[] resultado : listaDeResultados) {
+                ReceitaInsumoDto receitaInsumoDto = new ReceitaInsumoDto();
+
+                receitaInsumoDto.setInsumoNome((String) resultado[0]);
+
+                BigDecimal quantidadeUtilizadaInsumo =  new BigDecimal(resultado[1].toString())
+                        .setScale(2, RoundingMode.HALF_EVEN);
+                receitaInsumoDto.setQuantidadeUtilizadaInsumo(quantidadeUtilizadaInsumo);
+
+                BigDecimal valorGastoInsumo = new BigDecimal(resultado[2].toString())
+                        .setScale(2, RoundingMode.HALF_EVEN);
+                receitaInsumoDto.setValorGastoInsumo(valorGastoInsumo);
+
+                listaDeInsumosAssociadosAReceita.add(receitaInsumoDto);
+            }
+
+            logSucessoAoObterListaFiltradaEPaginadaDeInsumosAssociadosAReceita(receitaId);
+            return listaDeInsumosAssociadosAReceita;
+
+        } catch (Exception e) {
+            logErroInesperadoAoObterListaFiltradaEPaginadaDeInsumosAssociadosAReceita(receitaId, e);
+            throw new EmpreendedorErrorException("Erro inesperado ao obter lista de insumos associados à receita informada.");
+        }
+    }
+
+    private void setQueryParameters(Map<String, Object> parameters, Query query) {
+        for (Map.Entry<String, Object> param : parameters.entrySet()) {
+            query.setParameter(param.getKey(), param.getValue());
         }
     }
 }
