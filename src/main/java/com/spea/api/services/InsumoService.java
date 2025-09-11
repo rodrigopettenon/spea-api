@@ -1,9 +1,6 @@
 package com.spea.api.services;
 
-import com.spea.api.dtos.AssociacaoDto;
-import com.spea.api.dtos.InsumoDto;
-import com.spea.api.dtos.ReceitaDto;
-import com.spea.api.dtos.ReceitaInsumoDto;
+import com.spea.api.dtos.*;
 import com.spea.api.exceptions.EmpreendedorErrorException;
 import com.spea.api.repositories.InsumoRepository;
 import com.spea.api.repositories.ReceitaInsumoRepository;
@@ -14,15 +11,27 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.List;
+import java.util.*;
 
 import static com.spea.api.utils.LogUtil.*;
+import static com.spea.api.utils.StringUtil.normalizarEspacos;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Service
 @Transactional
 public class InsumoService {
+
+    private static final Integer ITENS_POR_PAGINA = 10;
+    private static final List<String> DIRECAO_PERMITIDA = Arrays.asList("asc", "desc");
+    private static final Map<String, String> MAP_ORDENAR_POR_PERMITIDOS;
+    static {
+        Map<String, String> map = new HashMap<>();
+        map.put("nomeInsumo", "nome");
+        map.put("quantidadePorPacote", "quantidade_por_pacote");
+        map.put("valorPagoPorPacote", "valor_pago_por_pacote");
+        MAP_ORDENAR_POR_PERMITIDOS = Collections.unmodifiableMap(map);
+    }
 
     @Autowired
     private InsumoRepository insumoRepository;
@@ -82,13 +91,6 @@ public class InsumoService {
             throw new EmpreendedorErrorException("O valor pago por cada pacote de insumo deve ser maior que 0.");
         }
     }
-
-    @Transactional(readOnly = true)
-    public List<InsumoDto> obterListaDeInsumos() {
-        logInicioDeObtencaoDeInsumos();
-        return insumoRepository.obterListaDeInsumos();
-    }
-
 
     @Transactional
     public InsumoDto atualizarInsumo(Long id, InsumoDto insumoDto) {
@@ -181,5 +183,57 @@ public class InsumoService {
         if (valorASubtrair.compareTo(BigDecimal.ZERO) < 0) {
             throw new EmpreendedorErrorException("O valor gasto não pode ser negativo.");
         }
+    }
+
+    @Transactional(readOnly = true)
+    public GlobalPageDto<InsumoDto> obterListaFiltradaEPaginadaDeInsumos(String nome, Integer paginaAtual,
+                                                                         String direcao, String ordenarPor) {
+        logInicioDeObtencaoDeInsumosFiltradosEPaginados();
+
+        String nomeSemEspacosExtras = normalizarEspacos(nome);
+        String direcaoCorrigida = corrigirDirecao(direcao);
+        String ordenarPorCorrigido = corrigirOrdenarPor(ordenarPor);
+
+        Long totalDeInsumos = insumoRepository
+                .obterTotalDeInsumosFiltradosQuery(nomeSemEspacosExtras);
+
+
+        Integer paginaAtualCorrigida = corrigirPaginaAtual(paginaAtual, totalDeInsumos, ITENS_POR_PAGINA);
+
+        return insumoRepository.obterListaFiltradaEPaginadaDeInsumos(nomeSemEspacosExtras, paginaAtualCorrigida,
+                ITENS_POR_PAGINA, direcaoCorrigida, ordenarPorCorrigido);
+    }
+
+    private String corrigirOrdenarPor(String ordenarPor) {
+        return MAP_ORDENAR_POR_PERMITIDOS.getOrDefault(ordenarPor, "nome");
+    }
+
+    private String corrigirDirecao(String direcao) {
+        if (isBlank(direcao) || !DIRECAO_PERMITIDA.contains(direcao.toLowerCase())) {
+            return "asc";
+        }
+        return direcao.toLowerCase();
+    }
+
+    public Integer corrigirPaginaAtual(Integer paginaAtual, Long totalDeInsumos, Integer itensPorPagina) {
+        if (isNull(paginaAtual) || paginaAtual < 0) {
+            return 0;
+        }
+
+        if (itensPorPagina == null || itensPorPagina <= 0) {
+            return 0;
+        }
+
+        int totalDePaginas = (int) Math.ceil((double) totalDeInsumos / itensPorPagina);
+
+        if (totalDePaginas == 0) {
+            return 0;
+        }
+
+        if (paginaAtual >= totalDePaginas) {
+            return totalDePaginas - 1;
+        }
+
+        return paginaAtual;
     }
 }

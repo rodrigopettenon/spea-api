@@ -88,46 +88,6 @@ class InsumoRepositoryTest {
         assertEquals("Erro inesperado ao cadastrar um novo insumo.", excecao.getMessage());
     }
 
-    // Métodos obterListaDeInsumos
-    @Test
-    @DisplayName("Deve obter uma lista de insumos com sucesso.")
-    void deveObterUmaListaDeInsumosComSucesso() {
-        List<Object[]> listaDeResultados = new ArrayList<>();
-        listaDeResultados.add(new Object[]{1L, "Arroz Branco", 1000.00, new BigDecimal("11.90")});
-
-        when(em.createNativeQuery(anyString())).thenReturn(query);
-        when(query.getResultList()).thenReturn(listaDeResultados);
-
-        List<InsumoDto> listaDeInsumosRetornada = insumoRepository.obterListaDeInsumos();
-
-        assertEquals(1, listaDeInsumosRetornada.size());
-
-        assertEquals(1L, listaDeInsumosRetornada.get(0).getId());
-        assertEquals("Arroz Branco", listaDeInsumosRetornada.get(0).getNome());
-        assertEquals(1000.00, listaDeInsumosRetornada.get(0).getQuantidadePorPacote());
-        assertEquals(new BigDecimal("11.90"), listaDeInsumosRetornada.get(0).getValorPagoPorPacote());
-
-        verify(em).createNativeQuery(anyString());
-        verify(query).getResultList();
-    }
-
-    @Test
-    @DisplayName("Deve lançar exceção quando ocorrer erro ao obter lista de insumos.")
-    void deveLancarExcecaoQuandoOcorrerErroAoObterListaDeInsumos() {
-        // Configuração do mock para lançar exceção
-        when(em.createNativeQuery(anyString())).thenReturn(query);
-        when(query.getResultList()).thenThrow(new RuntimeException("Erro simulado"));
-
-        // Execução e verificação
-        EmpreendedorErrorException excecao = assertThrows(EmpreendedorErrorException.class, () -> {
-            insumoRepository.obterListaDeInsumos();
-        });
-
-        assertEquals("Erro inesperado ao obter lista de insumos.", excecao.getMessage());
-        verify(em).createNativeQuery(anyString());
-        verify(query).getResultList();
-    }
-
     // Método verificarExistenciaDoInsumoPeloId
     @Test
     @DisplayName("Deve retornar true quando insumo existir pelo ID.")

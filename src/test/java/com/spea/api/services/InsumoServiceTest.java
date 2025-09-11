@@ -219,39 +219,6 @@ class InsumoServiceTest {
         verify(insumoRepository, never()).cadastrarInsumo(any());
     }
 
-    // Método obterListaDeInsumos
-    @Test
-    @DisplayName("Deve obter uma lista de insumos com sucesso.")
-    void deveObterUmaListaDeInsumosComSucesso() {
-        // Configuração do mock
-        List<InsumoDto> listaMock = new ArrayList<>();
-
-        InsumoDto primeiroInsumoDto = new InsumoDto();
-        primeiroInsumoDto.setId(1L);
-        primeiroInsumoDto.setNome("Farinha de Trigo");
-        primeiroInsumoDto.setQuantidadePorPacote(1000.00);
-        primeiroInsumoDto.setValorPagoPorPacote(new BigDecimal("5.90"));
-
-        InsumoDto segundoInsumoDto = new InsumoDto();
-        segundoInsumoDto.setId(2L);
-        segundoInsumoDto.setNome("Açúcar");
-        segundoInsumoDto.setQuantidadePorPacote(1000.00);
-        segundoInsumoDto.setValorPagoPorPacote(new BigDecimal("4.50"));
-
-        listaMock.add(primeiroInsumoDto);
-        listaMock.add(segundoInsumoDto);
-
-        when(insumoRepository.obterListaDeInsumos()).thenReturn(listaMock);
-
-        // Execução
-        List<InsumoDto> resultado = insumoService.obterListaDeInsumos();
-
-        // Verificações
-        assertNotNull(resultado);
-        assertEquals(2, resultado.size());
-        verify(insumoRepository).obterListaDeInsumos();
-    }
-
     // Método atualizarInsumo
     @Test
     @DisplayName("Deve atualizar um insumo com sucesso.")

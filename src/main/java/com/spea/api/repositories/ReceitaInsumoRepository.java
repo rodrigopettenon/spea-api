@@ -371,7 +371,7 @@ public class ReceitaInsumoRepository {
             Map<String, Object> parametros = new HashMap<>();
 
             StringBuilder sql = new StringBuilder();
-            sql.append(" SELECT i.nome, ri.quantidade_utilizada_insumo, ri.valor_gasto_insumo ");
+            sql.append(" SELECT i.id, i.nome, ri.quantidade_utilizada_insumo, ri.valor_gasto_insumo ");
             sql.append(" FROM tb_receita_insumo AS ri ");
             sql.append(" JOIN tb_insumos AS i ON ri.insumo_id = i.id ");
             sql.append(" WHERE 1=1 AND ri.receita_id = :receitaId ");
@@ -397,13 +397,14 @@ public class ReceitaInsumoRepository {
             for (Object[] resultado : listaDeResultados) {
                 ReceitaInsumoDto receitaInsumoDto = new ReceitaInsumoDto();
 
-                receitaInsumoDto.setInsumoNome((String) resultado[0]);
+                receitaInsumoDto.setInsumoId(((Number) resultado[0]).longValue());
+                receitaInsumoDto.setInsumoNome((String) resultado[1]);
 
-                BigDecimal quantidadeUtilizadaInsumo =  new BigDecimal(resultado[1].toString())
+                BigDecimal quantidadeUtilizadaInsumo =  new BigDecimal(resultado[2].toString())
                         .setScale(2, RoundingMode.HALF_EVEN);
                 receitaInsumoDto.setQuantidadeUtilizadaInsumo(quantidadeUtilizadaInsumo);
 
-                BigDecimal valorGastoInsumo = new BigDecimal(resultado[2].toString())
+                BigDecimal valorGastoInsumo = new BigDecimal(resultado[3].toString())
                         .setScale(2, RoundingMode.HALF_EVEN);
                 receitaInsumoDto.setValorGastoInsumo(valorGastoInsumo);
 

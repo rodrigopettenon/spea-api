@@ -213,7 +213,7 @@ public class ReceitaInsumoService {
     }
 
 
-    private Integer corrigirPaginaAtual(Integer paginaAtual, Long totalDeInsumos, Integer itensPorPagina) {
+    public Integer corrigirPaginaAtual(Integer paginaAtual, Long totalDeInsumos, Integer itensPorPagina) {
         if (isNull(paginaAtual) || paginaAtual < 0) {
             return 0;
         }

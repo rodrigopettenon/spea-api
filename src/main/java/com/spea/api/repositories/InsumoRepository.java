@@ -1,5 +1,6 @@
 package com.spea.api.repositories;
 
+import com.spea.api.dtos.GlobalPageDto;
 import com.spea.api.dtos.InsumoDto;
 import com.spea.api.exceptions.EmpreendedorErrorException;
 import jakarta.persistence.EntityManager;
@@ -10,9 +11,12 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.spea.api.utils.LogUtil.*;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Repository
 public class InsumoRepository {
@@ -38,38 +42,6 @@ public class InsumoRepository {
         }catch (Exception e) {
             logErroInesperadoAoCadastrarInsumo(insumoDto.getNome(), e);
             throw new EmpreendedorErrorException("Erro inesperado ao cadastrar um novo insumo.");
-        }
-    }
-
-    public List<InsumoDto> obterListaDeInsumos() {
-        try {
-            String sql = " SELECT id, nome, quantidade_por_pacote, valor_pago_por_pacote FROM tb_insumos ";
-
-            Query query = em.createNativeQuery(sql);
-
-            List<Object[]> listaDeResultados =  query.getResultList();
-
-            List<InsumoDto> listaDeInsumos = new ArrayList<>();
-            for (Object[] resultado : listaDeResultados) {
-                InsumoDto insumoDto = new InsumoDto();
-
-                insumoDto.setId(((Number) resultado[0]).longValue());
-                insumoDto.setNome((String) resultado[1]);
-                insumoDto.setQuantidadePorPacote(((Number) resultado[2]).doubleValue());
-
-                BigDecimal valor = new BigDecimal(resultado[3].toString())
-                        .setScale(2, RoundingMode.HALF_EVEN);
-                insumoDto.setValorPagoPorPacote(valor);
-
-                listaDeInsumos.add(insumoDto);
-            }
-
-            logSucessoAoObterListaDeInsumos();
-            return listaDeInsumos;
-
-        }catch (Exception e) {
-            logErroInesperadoAoObterListaDeInsumos(e);
-            throw new EmpreendedorErrorException("Erro inesperado ao obter lista de insumos.");
         }
     }
 
@@ -173,6 +145,102 @@ public class InsumoRepository {
         } catch (Exception e) {
             logErroInesperadoAoDeletarInsumo(id, e);
             throw new EmpreendedorErrorException("Erro inesperado ao deletar insumo pelo ID");
+        }
+    }
+
+    public GlobalPageDto<InsumoDto> obterListaFiltradaEPaginadaDeInsumos(String nome, Integer paginaAtual,
+                                                                         Integer itensPorPagina,
+                                                                         String direcao, String ordenarPor) {
+        Long totalDeInsumos = obterTotalDeInsumosFiltradosQuery(nome);
+
+        List<InsumoDto> listaDeInsumosFiltradaOrdenadaEPaginada =
+                obterListaFiltradaEPaginadaDeInsumosQuery(nome, paginaAtual, itensPorPagina,
+                direcao, ordenarPor);
+
+        GlobalPageDto<InsumoDto> listaFiltradaEPaginadaDeInsumos =
+                new GlobalPageDto<>(listaDeInsumosFiltradaOrdenadaEPaginada,
+                        totalDeInsumos, paginaAtual, itensPorPagina);
+
+        return listaFiltradaEPaginadaDeInsumos;
+    }
+
+    public Long obterTotalDeInsumosFiltradosQuery(String nome) {
+        try{
+            Map<String, Object> parametros = new HashMap<>();
+            StringBuilder sql = new StringBuilder();
+            sql.append(" SELECT COUNT(*) FROM tb_insumos ");
+
+            if (isNotBlank(nome)) {
+                sql.append(" WHERE LOWER(nome) LIKE LOWER(:nome) ");
+                parametros.put("nome", "%" + nome + "%");
+            }
+
+            Query query = em.createNativeQuery(sql.toString());
+
+            setQueryParameters(parametros, query);
+
+            Object resultado = query.getSingleResult();
+            Number totalDeInsumos = (Number) resultado;
+
+            logSucessoAoObterTotalDeInsumosFiltrados(nome);
+            return totalDeInsumos.longValue();
+
+        } catch (Exception e) {
+            logErroInesperadoAoObterTotalDeInsumosFiltrados(nome, e);
+            throw new EmpreendedorErrorException("Erro inesperado ao obter total de insumos filtrados.");
+        }
+    }
+
+    private List<InsumoDto> obterListaFiltradaEPaginadaDeInsumosQuery(String nome, Integer paginaAtual,
+                                                                      Integer itensPorPagina, String direcao,
+                                                                      String ordenarPor) {
+        try{
+            Map<String, Object> parametros = new HashMap<>();
+            StringBuilder sql = new StringBuilder();
+            sql.append(" SELECT id, nome, quantidade_por_pacote, valor_pago_por_pacote FROM tb_insumos ");
+
+            if (isNotBlank(nome)) {
+                sql.append(" WHERE LOWER(nome) LIKE LOWER(:nome) ");
+                parametros.put("nome", "%" + nome + "%");
+            }
+
+            sql.append(" ORDER BY ").append(ordenarPor).append(" ").append(direcao).append(" ");
+            sql.append(" LIMIT :limit OFFSET :offset ");
+
+            Query query = em.createNativeQuery(sql.toString())
+                    .setParameter("limit", itensPorPagina)
+                    .setParameter("offset", paginaAtual * itensPorPagina);
+
+            setQueryParameters(parametros, query);
+
+            List<Object[]> listaDeResultados = query.getResultList();
+            List<InsumoDto> listaFiltradaEPaginadaDeInsumos = new ArrayList<>();
+
+            for (Object[] resultado : listaDeResultados) {
+                InsumoDto insumoDto = new InsumoDto();
+
+                insumoDto.setId(((Number) resultado[0]).longValue());
+                insumoDto.setNome((String) resultado[1]);
+                insumoDto.setQuantidadePorPacote(((Number) resultado[2]).doubleValue());
+
+                BigDecimal valorPagoPorPacote = new BigDecimal(resultado[3].toString())
+                        .setScale(2, RoundingMode.HALF_EVEN);
+                insumoDto.setValorPagoPorPacote(valorPagoPorPacote);
+
+                listaFiltradaEPaginadaDeInsumos.add(insumoDto);
+            }
+            logSucessoAoObterListaDeInsumosFiltradosEPaginados(nome);
+            return listaFiltradaEPaginadaDeInsumos;
+
+        }catch (Exception e) {
+            logErroInesperadoAoObterListaDeInsumosFiltradosEPaginados(nome, e);
+            throw new EmpreendedorErrorException("Erro inesperado ao obter lista de insumos filtrada e paginada.");
+        }
+    }
+
+    private void setQueryParameters(Map<String, Object> parameters, Query query) {
+        for (Map.Entry<String, Object> param : parameters.entrySet()) {
+            query.setParameter(param.getKey(), param.getValue());
         }
     }
 }

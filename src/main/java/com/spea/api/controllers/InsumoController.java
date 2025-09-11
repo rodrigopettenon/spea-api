@@ -26,13 +26,12 @@ public class InsumoController extends BaseController{
         return createObjectReturn(insumoService.cadastrarInsumo(insumoDto));
     }
 
-    @Operation(summary = "Obtém lista de insumos cadastrados")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de insumos retornada com sucesso")
-    })
     @GetMapping("/lista")
-    public ResponseEntity<?> obterListaDeInsumos() {
-        return createObjectReturn(insumoService.obterListaDeInsumos());
+    public ResponseEntity<?> obterListaFiltradaEPaginadaDeInsumos(@RequestParam(required = false) String nomeInsumo,
+                                                                  @RequestParam(defaultValue = "0") Integer paginaAtual,
+                                                                  @RequestParam(defaultValue = "asc") String direcao,
+                                                                  @RequestParam(defaultValue = "nomeInsumo") String ordenarPor) {
+        return createObjectReturn(insumoService.obterListaFiltradaEPaginadaDeInsumos(nomeInsumo, paginaAtual, direcao, ordenarPor));
     }
 
     @Operation(

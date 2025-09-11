@@ -1,5 +1,7 @@
 package com.spea.api.repositories;
 
+import com.spea.api.dtos.GlobalPageDto;
+import com.spea.api.dtos.InsumoDto;
 import com.spea.api.dtos.ReceitaDto;
 import com.spea.api.exceptions.EmpreendedorErrorException;
 import jakarta.persistence.EntityManager;
@@ -10,9 +12,12 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.spea.api.utils.LogUtil.*;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Repository
 public class ReceitaRepository {
@@ -118,35 +123,6 @@ public class ReceitaRepository {
         }
     }
 
-    public List<ReceitaDto> obterListaDeReceitas() {
-        try{
-            String sql = " SELECT id, nome, total_gasto_insumos FROM tb_receitas ";
-
-            Query query = em.createNativeQuery(sql);
-
-            List<Object[]> listaDeResultados =  query.getResultList();
-
-            List<ReceitaDto> listaDeReceitas = new ArrayList<>();
-            for (Object[] resultado : listaDeResultados) {
-                ReceitaDto receitaDto = new ReceitaDto();
-
-                receitaDto.setId(((Number) resultado[0]).longValue());
-                receitaDto.setNome((String) resultado[1]);
-                BigDecimal totalGastoInsumos = new BigDecimal(resultado[2].toString())
-                        .setScale(2, RoundingMode.HALF_EVEN);
-                receitaDto.setTotalGastoInsumos(totalGastoInsumos);
-
-                listaDeReceitas.add(receitaDto);
-            }
-
-            logSucessoAoObterListaDeReceitas();
-            return listaDeReceitas;
-        } catch (Exception e) {
-            logErroInesperadoAoObterListaDeReceitas(e);
-            throw new EmpreendedorErrorException("Erro inesperado ao obter a lista de receitas.");
-        }
-    }
-
     public ReceitaDto atualizarNomeDaReceita(Long id, ReceitaDto receitaDto) {
         try{
             StringBuilder sql = new StringBuilder();
@@ -170,6 +146,101 @@ public class ReceitaRepository {
         } catch (Exception e) {
             logErroInesperadoAoAtualizarReceita(id, e);
             throw new EmpreendedorErrorException("Erro inesperado ao atualizar o nome da receita.");
+        }
+    }
+
+    public GlobalPageDto<ReceitaDto> obterListaFiltradaEPaginadaDeReceitas(String nome, Integer paginaAtual,
+                                                                          Integer itensPorPagina, String direcao,
+                                                                          String ordenarPor) {
+        Long totalDeReceitas = obterTotalDeReceitasFiltradasQuery(nome);
+
+        List<ReceitaDto> listaFiltradaEPaginadaDeReceitas =
+                obterListaOrdenadaFiltradaEPaginadaDeReceitasQuery(nome, paginaAtual, itensPorPagina, direcao, ordenarPor);
+
+        GlobalPageDto<ReceitaDto> listaDeReceitasFiltradasEPaginadas =
+                new GlobalPageDto<>(listaFiltradaEPaginadaDeReceitas, totalDeReceitas, paginaAtual, itensPorPagina);
+
+        return listaDeReceitasFiltradasEPaginadas;
+
+    }
+
+    public Long obterTotalDeReceitasFiltradasQuery(String nome) {
+        try{
+            Map<String, Object> parametros = new HashMap<>();
+            StringBuilder sql = new StringBuilder();
+            sql.append(" SELECT COUNT(*) FROM tb_receitas ");
+
+            if (isNotBlank(nome)) {
+                sql.append(" WHERE LOWER(nome) LIKE LOWER(:nome) ");
+                parametros.put("nome", "%" + nome + "%");
+            }
+
+            Query query = em.createNativeQuery(sql.toString());
+
+            setQueryParameters(parametros, query);
+
+            Object resultado = query.getSingleResult();
+            Number totalDeReceitas = (Number) resultado;
+
+            logSucessoAoObterTotalDeReceitasFiltradas(nome);
+            return totalDeReceitas.longValue();
+
+        } catch (Exception e) {
+            logErroInesperadoAoObterTotalDeReceitasFiltradas(nome, e);
+            throw new EmpreendedorErrorException("Erro inesperado ao obter total de receitas filtradas.");
+        }
+    }
+
+    private List<ReceitaDto> obterListaOrdenadaFiltradaEPaginadaDeReceitasQuery(String nome, Integer paginaAtual,
+                                                                                Integer itensPorPagina, String direcao,
+                                                                                String ordenarPor) {
+        try {
+            Map<String, Object> parametros = new HashMap<>();
+            StringBuilder sql = new StringBuilder();
+            sql.append(" SELECT id, nome, total_gasto_insumos FROM tb_receitas ");
+
+            if (isNotBlank(nome)) {
+                sql.append(" WHERE LOWER(nome) LIKE LOWER(:nome) ");
+                parametros.put("nome", "%" + nome + "%");
+            }
+
+            sql.append(" ORDER BY ").append(ordenarPor).append(" ").append(direcao).append(" ");
+            sql.append(" LIMIT :limit OFFSET :offset ");
+
+            Query query = em.createNativeQuery(sql.toString())
+                    .setParameter("limit", itensPorPagina)
+                    .setParameter("offset", paginaAtual * itensPorPagina);
+
+            setQueryParameters(parametros, query);
+
+            List<Object[]> listaDeResultados = query.getResultList();
+            List<ReceitaDto> listaFiltradaEPaginadaDeReceitas = new ArrayList<>();
+
+            for (Object[] resultado : listaDeResultados) {
+                ReceitaDto receitaDto = new ReceitaDto();
+
+                receitaDto.setId(((Number) resultado[0]).longValue());
+                receitaDto.setNome((String) resultado[1]);
+
+                BigDecimal totalGastoInsumos = new BigDecimal(resultado[2].toString())
+                        .setScale(2, RoundingMode.HALF_EVEN);
+                receitaDto.setTotalGastoInsumos(totalGastoInsumos);
+
+                listaFiltradaEPaginadaDeReceitas.add(receitaDto);
+            }
+
+            logSucessoAoObterListaFiltradaEPaginadaDeReceitas(nome);
+            return listaFiltradaEPaginadaDeReceitas;
+
+        } catch (Exception e) {
+            logErroInesperadoAoObterListaFiltradaEPaginadaDeReceitas(nome, e);
+            throw new EmpreendedorErrorException("Erro inesperado ao obter lista de receitas filtradas e paginadas.");
+        }
+    }
+
+    private void setQueryParameters(Map<String, Object> parameters, Query query) {
+        for (Map.Entry<String, Object> param : parameters.entrySet()) {
+            query.setParameter(param.getKey(), param.getValue());
         }
     }
 }

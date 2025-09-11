@@ -27,7 +27,7 @@ public class LogUtil {
         logInicioDeProcesso("cadastro do insumo", nome);
     }
 
-    public static void logInicioDeObtencaoDeInsumos() {
+    public static void logInicioDeObtencaoDeInsumosFiltradosEPaginados() {
         logInicioDeProcesso("obtenção de insumos", null);
     }
 
@@ -57,8 +57,8 @@ public class LogUtil {
         logInicioDeProcesso("obtenção de receita pelo id", receitaId);
     }
 
-    public static void logInicioObtencaoDeListaDeReceitas() {
-        logInicioDeProcesso("obtenção de lista das receitas", null);
+    public static void logInicioObtencaoDeListaFiltradaEPaginadaDeReceitas(String nome) {
+        logInicioDeProcesso("obtenção de lista das receitas paginadas e filtradas por", nome);
     }
 
     // Receita-Insumo
@@ -156,8 +156,12 @@ public class LogUtil {
         logSucesso("cadastrar o insumo", nome);
     }
 
-    public static void  logSucessoAoObterListaDeInsumos() {
-        logSucesso("obter lista de insumos",  null);
+    public static void logSucessoAoObterListaDeInsumosFiltradosEPaginados(String nome) {
+        logSucesso("obter lista de insumos paginados filtrados por",  nome);
+    }
+
+    public static void logSucessoAoObterTotalDeInsumosFiltrados(String nome) {
+        logSucesso("obter total de insumos filtrados por", nome);
     }
 
     public static void logSucessoAoVerificarExistenciaDoInsumo(Long id) {
@@ -193,8 +197,12 @@ public class LogUtil {
         logSucesso("obter receita pelo id", id);
     }
 
-    public static void logSucessoAoObterListaDeReceitas() {
-        logSucesso("obter lista de receitas", null);
+    public static void logSucessoAoObterListaFiltradaEPaginadaDeReceitas(String nome) {
+        logSucesso("obter lista de receitas paginadas e filtradas por", nome);
+    }
+
+    public static void logSucessoAoObterTotalDeReceitasFiltradas(String nome) {
+        logSucesso("obter total de receitas filtradas por", nome);
     }
 
     // Receita-Insumo
@@ -242,12 +250,17 @@ public class LogUtil {
     }
 
     // Insumo
+
     public static void logErroInesperadoAoCadastrarInsumo(String nome, Exception excecao) {
         logErroInesperado("cadastrar o insumo", nome, excecao);
     }
 
-    public static void logErroInesperadoAoObterListaDeInsumos(Exception excecao) {
-        logErroInesperado("obter lista de insumos", null, excecao);
+    public static void logErroInesperadoAoObterTotalDeInsumosFiltrados(String nome, Exception excecao) {
+        logErroInesperado("obter total de insumos filtrados por", nome, excecao);
+    }
+
+    public static void logErroInesperadoAoObterListaDeInsumosFiltradosEPaginados(String nome,Exception excecao) {
+        logErroInesperado("obter lista de insumos paginados e filtrados por", nome, excecao);
     }
 
     public static void logErroInesperadoAoVerificarExistenciaDoInsumo(Long id,Exception excecao) {
@@ -283,8 +296,12 @@ public class LogUtil {
         logErroInesperado("obter receita pelo id", identificador, excecao);
     }
 
-    public static void logErroInesperadoAoObterListaDeReceitas(Exception excecao) {
-        logErroInesperado("obter lista de receitas", null, excecao);
+    public static void logErroInesperadoAoObterListaFiltradaEPaginadaDeReceitas(String nome, Exception excecao) {
+        logErroInesperado("obter lista de receitas paginadas e filtradas por", nome, excecao);
+    }
+
+    public static void logErroInesperadoAoObterTotalDeReceitasFiltradas(String nome, Exception excecao){
+        logErroInesperado("obter total de receitas filtradas por", nome, excecao);
     }
 
     // Receita-Insumo

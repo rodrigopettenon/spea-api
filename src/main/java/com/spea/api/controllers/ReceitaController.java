@@ -39,13 +39,13 @@ public class ReceitaController extends BaseController {
         return createObjectReturn(receitaService.atualizarNomeDaReceita(id, receitaDto));
     }
 
-    @Operation(
-            summary = "Obtém lista de receitas cadastradas")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de receitas retornada com sucesso."),
-    })
     @GetMapping("/lista")
-    public ResponseEntity<?> obterListaDeReceitas() {
-        return createObjectReturn(receitaService.obterListaDeReceitas());
+    public ResponseEntity<?> obterListaFiltradaEPaginadaDeReceitas(@RequestParam(required = false) String nomeReceita,
+                                                                   @RequestParam(defaultValue = "0") Integer paginaAtual,
+                                                                   @RequestParam(defaultValue = "asc") String direcao,
+                                                                   @RequestParam(defaultValue = "nomeReceita") String ordenarPor) {
+        return createObjectReturn(receitaService.obterListaFiltradaEPaginadaDeReceitas(nomeReceita, paginaAtual, direcao, ordenarPor));
     }
+
+
 }
